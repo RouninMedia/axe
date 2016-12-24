@@ -1,6 +1,6 @@
 ## axe (ACSSS) - Augmented Cascading Style Sheet Selectors
 
-**axe** enables Cascading Style Sheets (.css files) to be extended with a series of additional selectors which allow the selection of parent elements, ancestor elements and preceding sibling elements. 
+**axe** selectors are an extension to the official selector syntax of Cascading Style Sheets (.css files) which enable the selection of parent elements, ancestor elements and preceding sibling elements. 
 
 
 # Existing CSS Selectors
