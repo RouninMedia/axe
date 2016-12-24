@@ -13,6 +13,6 @@ Augmented Cascading Style Sheet Selectors (ACSSS)
 - **?** - immediately preceding sibling selector
 - **!** - any preceding sibling selector
 - **%** - immediately adjacent sibling selector
-- **@** - any sibling selector
+- **|** - any sibling selector
 - **<** - immediate parent selector
 - **^** - any ancestor selector
