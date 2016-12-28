@@ -39,9 +39,6 @@ for (var i = 0; i < stylesheets.length; i++) {
     }
 
 
-            console.log(stylesheetRules);
-
-
     // BUILD AXE RULES OBJECT
 
     var axe = {};
@@ -84,11 +81,14 @@ for (var i = 0; i < stylesheets.length; i++) {
 
 
 
-function axeImmediateParent(axeRule) {
+function axeImmediateParent(axeRule, originType, operandType) {
     var originNodes = document.querySelectorAll(axeRule.originNode);
         
     for (var j = 0; j < originNodes.length; j++) {
-        if (originNodes[j].parentNode.nodeName === axeRule.operandNode.toUpperCase()) {
+        
+        if (((operandType === 'element') && (originNodes[j].parentNode.nodeName === axeRule.operandNode.toUpperCase())) ||
+            ((operandType === 'class') && (originNodes[j].parentNode.className === axeRule.operandNode.substring(1))) ||
+            ((operandType === 'id') && (originNodes[j].parentNode.id === axeRule.operandNode.substring(1)))) {
 
             Object.keys(axeRule.styles).forEach(function(property){
                 originNodes[j].parentNode.style[property] = axeRule.styles[property];
@@ -98,7 +98,7 @@ function axeImmediateParent(axeRule) {
 }
 
 
-function axeAllAncestors(axeRule) {
+function axeAllAncestors(axeRule, originType, operandType) {
     var originNodes = document.querySelectorAll(axeRule.originNode);
         
     for (var j = 0; j < originNodes.length; j++) {
@@ -112,7 +112,9 @@ function axeAllAncestors(axeRule) {
         }
 
         for (var k = 0; k < ancestors.length; k++) {
-            if (ancestors[k].nodeName === axeRule.operandNode.toUpperCase()) {
+            if (((operandType === 'element') && (ancestors[k].nodeName === axeRule.operandNode.toUpperCase())) ||
+                ((operandType === 'class') && (ancestors[k].className === axeRule.operandNode.substring(1))) ||
+                ((operandType === 'id') && (ancestors[k].id === axeRule.operandNode.substring(1)))) {
                 Object.keys(axeRule.styles).forEach(function(property){
                     ancestors[k].style[property] = axeRule.styles[property];
                 });
@@ -122,7 +124,7 @@ function axeAllAncestors(axeRule) {
 }
 
 
-function axeImmediatePreviousSibling(axeRule) {
+function axeImmediatePreviousSibling(axeRule, originType, operandType) {
     var originNodes = document.querySelectorAll(axeRule.originNode);
         
     for (var j = 0; j < originNodes.length; j++) {
@@ -133,7 +135,10 @@ function axeImmediatePreviousSibling(axeRule) {
             if (siblings[k] !== originNodes[j].previousElementSibling) continue;
             if (siblings[k] === originNodes[j]) break;
 
-            if (siblings[k].nodeName === axeRule.operandNode.toUpperCase()) {
+            if (((operandType === 'element') && (siblings[k].nodeName === axeRule.operandNode.toUpperCase())) ||
+                ((operandType === 'class') && (siblings[k].className === axeRule.operandNode.substring(1))) ||
+                ((operandType === 'id') && (siblings[k].id === axeRule.operandNode.substring(1)))) {
+                
                 Object.keys(axeRule.styles).forEach(function(property){
                     siblings[k].style[property] = axeRule.styles[property];
                 });
@@ -144,7 +149,7 @@ function axeImmediatePreviousSibling(axeRule) {
 }
 
 
-function axeAllPreviousSiblings(axeRule) {
+function axeAllPreviousSiblings(axeRule, originType, operandType) {
     var originNodes = document.querySelectorAll(axeRule.originNode);
         
     for (var j = 0; j < originNodes.length; j++) {
@@ -154,7 +159,10 @@ function axeAllPreviousSiblings(axeRule) {
         for (var k = 0; k < siblings.length; k++) {
             if (siblings[k] === originNodes[j]) break;
 
-            if (siblings[k].nodeName === axeRule.operandNode.toUpperCase()) {
+            if (((operandType === 'element') && (siblings[k].nodeName === axeRule.operandNode.toUpperCase())) ||
+                ((operandType === 'class') && (siblings[k].className === axeRule.operandNode.substring(1))) ||
+                ((operandType === 'id') && (siblings[k].id === axeRule.operandNode.substring(1)))) {
+
                 Object.keys(axeRule.styles).forEach(function(property){
                     siblings[k].style[property] = axeRule.styles[property];
                 });
@@ -165,7 +173,7 @@ function axeAllPreviousSiblings(axeRule) {
 }
 
 
-function axeImmediateSiblings(axeRule) {
+function axeImmediateSiblings(axeRule, originType, operandType) {
     var originNodes = document.querySelectorAll(axeRule.originNode);
         
     for (var j = 0; j < originNodes.length; j++) {
@@ -176,7 +184,9 @@ function axeImmediateSiblings(axeRule) {
             if (siblings[k] === originNodes[j]) continue;
             if ((siblings[k] !== originNodes[j].previousElementSibling) && (siblings[k] !== originNodes[j].nextElementSibling)) continue;
 
-            if (siblings[k].nodeName === axeRule.operandNode.toUpperCase()) {
+            if (((operandType === 'element') && (siblings[k].nodeName === axeRule.operandNode.toUpperCase())) ||
+                ((operandType === 'class') && (siblings[k].className === axeRule.operandNode.substring(1))) ||
+                ((operandType === 'id') && (siblings[k].id === axeRule.operandNode.substring(1)))) {
                 Object.keys(axeRule.styles).forEach(function(property){
                     siblings[k].style[property] = axeRule.styles[property];
                 });
@@ -187,7 +197,7 @@ function axeImmediateSiblings(axeRule) {
 }
 
 
-function axeAllSiblings(axeRule) {
+function axeAllSiblings(axeRule, originType, operandType) {
     var originNodes = document.querySelectorAll(axeRule.originNode);
         
     for (var j = 0; j < originNodes.length; j++) {
@@ -197,7 +207,9 @@ function axeAllSiblings(axeRule) {
         for (var k = 0; k < siblings.length; k++) {
             if (siblings[k] === originNodes[j]) continue;
 
-            if (siblings[k].nodeName === axeRule.operandNode.toUpperCase()) {
+            if (((operandType === 'element') && (siblings[k].nodeName === axeRule.operandNode.toUpperCase())) ||
+                ((operandType === 'class') && (siblings[k].className === axeRule.operandNode.substring(1))) ||
+                ((operandType === 'id') && (siblings[k].id === axeRule.operandNode.substring(1)))) {
                 Object.keys(axeRule.styles).forEach(function(property){
                     siblings[k].style[property] = axeRule.styles[property];
                 });
@@ -209,11 +221,25 @@ function axeAllSiblings(axeRule) {
 
 
 for (var i = 0; i < axe.rules.length; i++) {
+
+    var originType = 'element';
+    var operandType = 'element';
+
+    switch (axe.rules[i].originNode.substring(0,1)) {
+        case ('.') : originType = 'class'; break;
+        case ('#') : originType = 'id'; break;
+    }
+
+    switch (axe.rules[i].operandNode.substring(0,1)) {
+        case ('.') : operandType = 'class'; break;
+        case ('#') : operandType = 'id'; break;
+    }
+
 	var axeRule = axe.rules[i];
-	if (axeRule.selector.match(/\</g)) {axeImmediateParent(axeRule);}
-	if (axeRule.selector.match(/\^/g)) {axeAllAncestors(axeRule);}
-	if (axeRule.selector.match(/\?/g)) {axeImmediatePreviousSibling(axeRule);}
-	if (axeRule.selector.match(/\!/g)) {axeAllPreviousSiblings(axeRule);}
-	if (axeRule.selector.match(/\%/g)) {axeImmediateSiblings(axeRule);}
-	if (axeRule.selector.match(/\|/g)) {axeAllSiblings(axeRule);}
+	if (axeRule.selector.match(/\</g)) {axeImmediateParent(axeRule, originType, operandType);}
+	if (axeRule.selector.match(/\^/g)) {axeAllAncestors(axeRule, originType, operandType);}
+	if (axeRule.selector.match(/\?/g)) {axeImmediatePreviousSibling(axeRule, originType, operandType);}
+	if (axeRule.selector.match(/\!/g)) {axeAllPreviousSiblings(axeRule, originType, operandType);}
+	if (axeRule.selector.match(/\%/g)) {axeImmediateSiblings(axeRule, originType, operandType);}
+	if (axeRule.selector.match(/\|/g)) {axeAllSiblings(axeRule, originType, operandType);}
 }
