@@ -6,6 +6,7 @@ for (var i = 0; i < stylesheets.length; i++) {
 
     var stylesheet = stylesheets[i].textContent;
     stylesheet = stylesheet.replace(/\n/g,' ');
+    stylesheet = stylesheet.replace(/\/\*.*\*\//g,'');
     stylesheet = stylesheet.replace(/[\s]*{/g,'{');
     stylesheet = stylesheet.replace(/[\s]*}/g,'}');
     stylesheet = stylesheet.replace(/{[\s]*/g,'{');
@@ -38,12 +39,17 @@ for (var i = 0; i < stylesheets.length; i++) {
         }
     }
 
+    console.log(stylesheetRules);
 
     // BUILD AXE RULES OBJECT
 
     var axe = {};
     axe.rules = [];
-    var axeRuleIndex = 0;  
+    var axeRuleIndex = 0;
+    var identifiers = ['element','class','id'];
+    var labels = ['nodeName','className','id'];
+    var symbols = ['<','^','%','|','?','!'];
+    var selectors = ['ancestor-immediate', 'ancestor-all', 'sibling-immediate', 'sibling-all', 'sibling-immediate-previous', 'sibling-all-previous'];
 
     for (var j = 0; j < stylesheetRules.length; j++) {
 
@@ -66,40 +72,81 @@ for (var i = 0; i < stylesheets.length; i++) {
             	styles[property] = value;
                 k++;
             }
-            
+
             axe.rules[axeRuleIndex] = {};
-            axe.rules[axeRuleIndex]['index'] = stylesheetRules[j];
-            axe.rules[axeRuleIndex]['selector'] = stylesheetRules[(j+1)];
-            axe.rules[axeRuleIndex]['symbol'] = axeSymbol;
-            axe.rules[axeRuleIndex]['originNode'] = axe.rules[axeRuleIndex].selector.substring(0,axe.rules[axeRuleIndex].selector.indexOf(axeSymbol)).trim();
-            axe.rules[axeRuleIndex]['operandNode'] = axe.rules[axeRuleIndex].selector.substring((axe.rules[axeRuleIndex].selector.indexOf(axeSymbol)) + 1).trim();
-            axe.rules[axeRuleIndex]['styles'] = styles;
+            var axeRule = axe.rules[axeRuleIndex];
+
+            axeRule['index'] = stylesheetRules[j];
+            axeRule['selector'] = stylesheetRules[(j+1)];
+            axeRule['symbol'] = axeSymbol;
+            axeRule['styles'] = styles;
+            axeRule['type'] = selectors[symbols.indexOf(axeRule.symbol)];
+
+            axeRule['origin'] = {};
+            axeRule['operand'] = {};
+
+            axeRule.origin['node'] = axeRule.selector.substring(0,axeRule.selector.indexOf(axeSymbol)).trim();
+            axeRule.operand['node'] = axeRule.selector.substring((axeRule.selector.indexOf(axeSymbol)) + 1).trim();
+    
+            axeRule.origin['type'] = 0;
+            axeRule.operand['type'] = 0;
+
+            switch (axeRule.origin.node.substring(0,1)) {
+                case ('.') : axeRule.origin.type = 1; break;
+                case ('#') : axeRule.origin.type = 2; break;
+            }
+
+            switch (axeRule.operand.node.substring(0,1)) {
+                case ('.') : axeRule.operand.type = 1; break;
+                case ('#') : axeRule.operand.type = 2; break;
+            }
+    
+            axeRule.origin['identifier'] = identifiers[axeRule.origin.type];
+            axeRule.operand['identifier'] = identifiers[axeRule.origin.type];
+
+            axeRule.origin['name'] = (axeRule.origin.type === 0 ? axeRule.origin.node : axeRule.origin.node.substring(1));
+            axeRule.operand['name'] = (axeRule.operand.type === 0 ? axeRule.operand.node.toUpperCase() : axeRule.operand.node.substring(1));
+
             axeRuleIndex++;
         }
     }
 }
 
+console.log(axe);
 
+function styleString(styleObject) {
+    var styleString = '';
 
-function axeImmediateParent(axeRule, originType, operandType) {
-    var originNodes = document.querySelectorAll(axeRule.originNode);
-        
-    for (var j = 0; j < originNodes.length; j++) {
-        
-        if (((operandType === 'element') && (originNodes[j].parentNode.nodeName === axeRule.operandNode.toUpperCase())) ||
-            ((operandType === 'class') && (originNodes[j].parentNode.className === axeRule.operandNode.substring(1))) ||
-            ((operandType === 'id') && (originNodes[j].parentNode.id === axeRule.operandNode.substring(1)))) {
-
-            Object.keys(axeRule.styles).forEach(function(property){
-                originNodes[j].parentNode.style[property] = axeRule.styles[property];
-            });
-        }
-    }
+    Object.keys(styleObject).forEach(function(property){
+        styleString += property + ':' + styleObject[property] + '; ';
+    });
+    
+    return styleString;
 }
 
 
-function axeAllAncestors(axeRule, originType, operandType) {
-    var originNodes = document.querySelectorAll(axeRule.originNode);
+function ancestorImmediate(axeRule) {
+    var originNodes = document.querySelectorAll(axeRule.origin.node);
+        
+    for (var j = 0; j < originNodes.length; j++) {
+
+        var parent = originNodes[j].parentNode;
+
+        if (parent[labels[axeRule.operand.type]] === axeRule.operand.name) {
+            parent.setAttribute('data-axe-selector', axeRule.origin.identifier + '-' + axeRule.origin.name + '_' + axeRule.type + '_' + axeRule.operand.identifier + '-' + axeRule.operand.name);
+        }
+    }
+
+    document.styleSheets[0].insertRule('[data-axe-selector="' + axeRule.origin.identifier + '-' + axeRule.origin.name + '_' + axeRule.type + '_' + axeRule.operand.identifier + '-' + axeRule.operand.name + '"] {' + styleString(axeRule.styles) + '}',axeRule.index);
+
+console.log(document.styleSheets[0].cssRules[0]);
+console.log(document.styleSheets[0].cssRules[7]);
+
+}
+
+
+function ancestorAll(axeRule) {
+    var originNodes = document.querySelectorAll(axeRule.origin.node);
         
     for (var j = 0; j < originNodes.length; j++) {
 
@@ -112,20 +159,18 @@ function axeAllAncestors(axeRule, originType, operandType) {
         }
 
         for (var k = 0; k < ancestors.length; k++) {
-            if (((operandType === 'element') && (ancestors[k].nodeName === axeRule.operandNode.toUpperCase())) ||
-                ((operandType === 'class') && (ancestors[k].className === axeRule.operandNode.substring(1))) ||
-                ((operandType === 'id') && (ancestors[k].id === axeRule.operandNode.substring(1)))) {
-                Object.keys(axeRule.styles).forEach(function(property){
-                    ancestors[k].style[property] = axeRule.styles[property];
-                });
+            if (ancestors[k][labels[axeRule.operand.type]] === axeRule.operand.name) {
+                ancestors[k].setAttribute('data-axe-selector', axeRule.origin.identifier + '-' + axeRule.origin.name + '_' + axeRule.type + '_' + axeRule.operand.identifier + '-' + axeRule.operand.name);
             }
         }
     }
+
+    document.styleSheets[0].insertRule('[data-axe-selector="' + axeRule.origin.identifier + '-' + axeRule.origin.name + '_' + axeRule.type + '_' + axeRule.operand.identifier + '-' + axeRule.operand.name + '"] {' + styleString(axeRule.styles) + '}',axeRule.index);
 }
 
 
-function axeImmediatePreviousSibling(axeRule, originType, operandType) {
-    var originNodes = document.querySelectorAll(axeRule.originNode);
+function siblingImmediatePrevious(axeRule) {
+    var originNodes = document.querySelectorAll(axeRule.origin.node);
         
     for (var j = 0; j < originNodes.length; j++) {
 
@@ -135,22 +180,18 @@ function axeImmediatePreviousSibling(axeRule, originType, operandType) {
             if (siblings[k] !== originNodes[j].previousElementSibling) continue;
             if (siblings[k] === originNodes[j]) break;
 
-            if (((operandType === 'element') && (siblings[k].nodeName === axeRule.operandNode.toUpperCase())) ||
-                ((operandType === 'class') && (siblings[k].className === axeRule.operandNode.substring(1))) ||
-                ((operandType === 'id') && (siblings[k].id === axeRule.operandNode.substring(1)))) {
-                
-                Object.keys(axeRule.styles).forEach(function(property){
-                    siblings[k].style[property] = axeRule.styles[property];
-                });
-
+            if (siblings[k][labels[axeRule.operand.type]] === axeRule.operand.name) {
+                siblings[k].setAttribute('data-axe-selector', axeRule.origin.identifier + '-' + axeRule.origin.name + '_' + axeRule.type + '_' + axeRule.operand.identifier + '-' + axeRule.operand.name);
             }
         }
     }
+
+    document.styleSheets[0].insertRule('[data-axe-selector="' + axeRule.origin.identifier + '-' + axeRule.origin.name + '_' + axeRule.type + '_' + axeRule.operand.identifier + '-' + axeRule.operand.name + '"] {' + styleString(axeRule.styles) + '}',axeRule.index);
 }
 
 
-function axeAllPreviousSiblings(axeRule, originType, operandType) {
-    var originNodes = document.querySelectorAll(axeRule.originNode);
+function siblingAllPrevious(axeRule) {
+    var originNodes = document.querySelectorAll(axeRule.origin.node);
         
     for (var j = 0; j < originNodes.length; j++) {
 
@@ -159,22 +200,18 @@ function axeAllPreviousSiblings(axeRule, originType, operandType) {
         for (var k = 0; k < siblings.length; k++) {
             if (siblings[k] === originNodes[j]) break;
 
-            if (((operandType === 'element') && (siblings[k].nodeName === axeRule.operandNode.toUpperCase())) ||
-                ((operandType === 'class') && (siblings[k].className === axeRule.operandNode.substring(1))) ||
-                ((operandType === 'id') && (siblings[k].id === axeRule.operandNode.substring(1)))) {
-
-                Object.keys(axeRule.styles).forEach(function(property){
-                    siblings[k].style[property] = axeRule.styles[property];
-                });
-
+            if (siblings[k][labels[axeRule.operand.type]] === axeRule.operand.name) {
+                siblings[k].setAttribute('data-axe-selector', axeRule.origin.identifier + '-' + axeRule.origin.name + '_' + axeRule.type + '_' + axeRule.operand.identifier + '-' + axeRule.operand.name);
             }
         }
     }
+
+    document.styleSheets[0].insertRule('[data-axe-selector="' + axeRule.origin.identifier + '-' + axeRule.origin.name + '_' + axeRule.type + '_' + axeRule.operand.identifier + '-' + axeRule.operand.name + '"] {' + styleString(axeRule.styles) + '}',axeRule.index);
 }
 
 
-function axeImmediateSiblings(axeRule, originType, operandType) {
-    var originNodes = document.querySelectorAll(axeRule.originNode);
+function siblingImmediate(axeRule) {
+    var originNodes = document.querySelectorAll(axeRule.origin.node);
         
     for (var j = 0; j < originNodes.length; j++) {
 
@@ -184,21 +221,18 @@ function axeImmediateSiblings(axeRule, originType, operandType) {
             if (siblings[k] === originNodes[j]) continue;
             if ((siblings[k] !== originNodes[j].previousElementSibling) && (siblings[k] !== originNodes[j].nextElementSibling)) continue;
 
-            if (((operandType === 'element') && (siblings[k].nodeName === axeRule.operandNode.toUpperCase())) ||
-                ((operandType === 'class') && (siblings[k].className === axeRule.operandNode.substring(1))) ||
-                ((operandType === 'id') && (siblings[k].id === axeRule.operandNode.substring(1)))) {
-                Object.keys(axeRule.styles).forEach(function(property){
-                    siblings[k].style[property] = axeRule.styles[property];
-                });
-
+            if (siblings[k][labels[axeRule.operand.type]] === axeRule.operand.name) {
+                siblings[k].setAttribute('data-axe-selector', axeRule.origin.identifier + '-' + axeRule.origin.name + '_' + axeRule.type + '_' + axeRule.operand.identifier + '-' + axeRule.operand.name);
             }
         }
     }
+
+    document.styleSheets[0].insertRule('[data-axe-selector="' + axeRule.origin.identifier + '-' + axeRule.origin.name + '_' + axeRule.type + '_' + axeRule.operand.identifier + '-' + axeRule.operand.name + '"] {' + styleString(axeRule.styles) + '}',axeRule.index);
 }
 
 
-function axeAllSiblings(axeRule, originType, operandType) {
-    var originNodes = document.querySelectorAll(axeRule.originNode);
+function siblingAll(axeRule) {
+    var originNodes = document.querySelectorAll(axeRule.origin.node);
         
     for (var j = 0; j < originNodes.length; j++) {
 
@@ -207,39 +241,26 @@ function axeAllSiblings(axeRule, originType, operandType) {
         for (var k = 0; k < siblings.length; k++) {
             if (siblings[k] === originNodes[j]) continue;
 
-            if (((operandType === 'element') && (siblings[k].nodeName === axeRule.operandNode.toUpperCase())) ||
-                ((operandType === 'class') && (siblings[k].className === axeRule.operandNode.substring(1))) ||
-                ((operandType === 'id') && (siblings[k].id === axeRule.operandNode.substring(1)))) {
-                Object.keys(axeRule.styles).forEach(function(property){
-                    siblings[k].style[property] = axeRule.styles[property];
-                });
-
+            if (siblings[k][labels[axeRule.operand.type]] === axeRule.operand.name) {
+                siblings[k].setAttribute('data-axe-selector', axeRule.origin.identifier + '-' + axeRule.origin.name + '_' + axeRule.type + '_' + axeRule.operand.identifier + '-' + axeRule.operand.name);
             }
         }
     }
+
+    document.styleSheets[0].insertRule('[data-axe-selector="' + axeRule.origin.identifier + '-' + axeRule.origin.name + '_' + axeRule.type + '_' + axeRule.operand.identifier + '-' + axeRule.operand.name + '"] {' + styleString(axeRule.styles) + '}',axeRule.index);
 }
 
 
 for (var i = 0; i < axe.rules.length; i++) {
 
-    var originType = 'element';
-    var operandType = 'element';
+    var axeRule = axe.rules[i];
 
-    switch (axe.rules[i].originNode.substring(0,1)) {
-        case ('.') : originType = 'class'; break;
-        case ('#') : originType = 'id'; break;
+    switch (axeRule.symbol) {
+        case ('<') : ancestorImmediate(axeRule); break;
+        case ('^') : ancestorAll(axeRule); break;
+        case ('%') : siblingImmediate(axeRule); break;
+        case ('|') : siblingAll(axeRule); break;
+        case ('?') : siblingImmediatePrevious(axeRule); break;
+        case ('!') : siblingAllPrevious(axeRule); break;
     }
-
-    switch (axe.rules[i].operandNode.substring(0,1)) {
-        case ('.') : operandType = 'class'; break;
-        case ('#') : operandType = 'id'; break;
-    }
-
-	var axeRule = axe.rules[i];
-	if (axeRule.selector.match(/\</g)) {axeImmediateParent(axeRule, originType, operandType);}
-	if (axeRule.selector.match(/\^/g)) {axeAllAncestors(axeRule, originType, operandType);}
-	if (axeRule.selector.match(/\?/g)) {axeImmediatePreviousSibling(axeRule, originType, operandType);}
-	if (axeRule.selector.match(/\!/g)) {axeAllPreviousSiblings(axeRule, originType, operandType);}
-	if (axeRule.selector.match(/\%/g)) {axeImmediateSiblings(axeRule, originType, operandType);}
-	if (axeRule.selector.match(/\|/g)) {axeAllSiblings(axeRule, originType, operandType);}
 }
