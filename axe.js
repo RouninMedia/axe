@@ -44,7 +44,7 @@ for (var i = 0; i < stylesheets.length; i++) {
     // BUILD AXE RULES OBJECT
 
     var axe = {};
-    axe.rules = [];
+    axe['axeRules'] = [];
     var axeRuleIndex = 0;
     var symbols = ['<','^','%','|','?','!'];
 
@@ -52,68 +52,54 @@ for (var i = 0; i < stylesheets.length; i++) {
 
         if ((typeof stylesheetRules[j] === 'number') && (stylesheetRules[(j+1)].match(/(\<|\^|\?|\!|\%|\|)/))) {
 
-            axe.rules[axeRuleIndex] = {};
-            var axeRule = axe.rules[axeRuleIndex];
-            axeRule['index'] = stylesheetRules[j];
-            axeRule['axeselector'] = [stylesheetRules[(j+1)]];
+            axe.axeRules[axeRuleIndex] = {};
+            var axeRule = axe.axeRules[axeRuleIndex];
+            axeRule['axeIndex'] = stylesheetRules[j];
 
-            var s = 0;
-            while (symbols.indexOf(stylesheetRules[(j+1)][s]) === -1) {s++;}
-            axeRule['symbol'] = symbols[symbols.indexOf(stylesheetRules[(j+1)][s])];
+            var stone = stylesheetRules[(j+1)];
+            stone = stone.replace(/(\w)\s+([\w|\.|\#])/g,'$1; ;$2');
+            stone = stone.replace(/(\w)\s*?([\>|\+|\~|\<|\^|\?|\!|\%|\|])\s*?([\w|\.|\#])/g,'$1;$2;$3');
+            bronze = stone.split(';');
+
+            var iron = '';
+
+            for (var a = 0; a < bronze.length; a++) {
+
+                if (symbols.indexOf(bronze[a]) > -1) {
+                    iron += ';' + ' ' + bronze[a] + ' ' + bronze[(a + 1)];
+                    
+                    if ((a < (bronze.length - 2)) && (symbols.indexOf(bronze[(a + 2)]) < 0)) {
+                        iron += ';';
+                    }
+
+                    if (a < (bronze.length - 1)) {
+                        a++;
+                    }
+                }
+                    
+                else if ((a === 0) || (bronze[a] === ' ') || (bronze[(a - 1)] === ' ')) {
+                    iron += bronze[a];
+                }
+
+                else {
+                    iron += ' ' + bronze[a];
+                }
+            }
+
+            axeRule['axeSelector'] = iron.split(';');
+            axeRule.axeSelector.unshift(stylesheetRules[(j+1)]);
 
             var k = j + 2;
-            var styles = {};
+            var axeStyles = {};
 
             while (typeof stylesheetRules[k] === 'string') {
                 var property = stylesheetRules[k].substring(0,stylesheetRules[k].indexOf(':'));
                 var value = stylesheetRules[k].substring((stylesheetRules[k].indexOf(':') + 1));
-                styles[property] = value;
+                axeStyles[property] = value;
                 k++;
             }
 
-            axeRule['styles'] = styles;
-
-            axeRule['origin'] = {};
-            axeRule['operand'] = {};
-
-            axeRule.origin['selector'] = axeRule.axeselector[0].substring(0,axeRule.axeselector[0].indexOf(axeRule.symbol)).trim();
-            axeRule.operand['selector'] = axeRule.axeselector[0].substring((axeRule.axeselector[0].indexOf(axeRule.symbol)) + 1).trim();
-
-            var operandSelectorString = axeRule.operand['selector'];
-            operandSelectorString = operandSelectorString.replace(/(\w)\s+([\w|\.|\#])/g,'$1; ;$2');
-            operandSelectorString = operandSelectorString.replace(/(\w)\s*?([\>|\+|\~|\<|\^|\?|\!|\%|\|])\s*?([\w|\.|\#])/g,'$1;$2;$3');
-            axeRule.operand.selector = operandSelectorString.split(';');
-
-            axeRule.axeselector[1] = axeRule.origin.selector + ' ' + axeRule.symbol +  ' ' + axeRule.operand.selector[0];
-
-
-  
-            if (axeRule.operand.selector.length > 1) {
-                var axeSelectorString = '';
-
-                for (var a = 1; a < axeRule.operand.selector.length; a++) {
-
-                    if (symbols.indexOf(axeRule.operand.selector[a]) > -1) {
-                        axeSelectorString += ';' + ' ' + axeRule.operand.selector[a] + ' ' + axeRule.operand.selector[(a + 1)] + ';';
-                        a++;
-                    }
-                    
-                    else if ((axeRule.operand.selector[a] === ' ') || (axeRule.operand.selector[(a - 1)] === ' ')) {
-                        axeSelectorString += axeRule.operand.selector[a];
-                    }
-
-                    else {
-                        axeSelectorString += ' ' + axeRule.operand.selector[a];
-                    }
-                }
-
-                var axeSelectorArray = axeSelectorString.split(';');
-                
-                for (var a = 0; a < axeSelectorArray.length; a++) {
-                    axeRule.axeselector[(a + 2)] = axeSelectorArray[a];
-                }
-
-            }
+            axeRule['axeStyles'] = axeStyles;
 
             axeRuleIndex++;
         }
@@ -224,58 +210,85 @@ function activateSymbol(symbol, node) {
 
 function getSelectorFragment(segment) {
     var i = 1;
-    var selectorFragment = '[data-axeselector="';
+    var selectorFragment = '[data-axeSelector="';
 
     while (i < segment) {
-        selectorFragment += axeRule.axeselector[i];
+        selectorFragment += axeRule.axeSelector[i];
         i++;
     }
 
-    selectorFragment += axeRule.axeselector[i];
+    selectorFragment += axeRule.axeSelector[i];
     i++;
 
-    selectorFragment += '"]' + (axeRule.axeselector[i] ? axeRule.axeselector[i] : '');
+    selectorFragment += '"]' + (axeRule.axeSelector[i] ? axeRule.axeSelector[i] : '');
     return selectorFragment;
 }
 
 
+var segment = 0;
+
+// WHAT IS THE SHORTEST LENGTH axeRule.axeSelector can be?
+
 function axeStyle(axeRule) {
-    var nodes = document.querySelectorAll(axeRule.origin.selector);
-    var segment = 1;
-    var selectorFragment = getSelectorFragment(segment);
 
-    for (var j = 0; j < nodes.length; j++) {
+    // DEAL WITH SIMPLE SELECTORS
 
-        var symbol = axeRule.symbol;
-        var node = nodes[j];
-        var targetElements = activateSymbol(symbol, node);
-
-        targetElements.forEach(function(targetElement){
-            if (targetElement[nodeProperties(axeRule.operand.selector[0]).label] === nodeProperties(axeRule.operand.selector[0]).name) {
-                targetElement.setAttribute('data-axeselector', axeRule.axeselector[segment]);
-            }
-        });
-    }
-
-
-    while (axeRule.axeselector.length > (segment + 2)) {
+    while (segment === 0) {
         var newSegment = (segment + 2);
-        var nodes = document.querySelectorAll(selectorFragment);
-        var currentAttribute = axeRule.axeselector[1];
-        var nextAttribute = axeRule.axeselector[1];
-        for (var a = 2; a < newSegment; a++) {currentAttribute += axeRule.axeselector[a];}
-        for (var a = 2; a < (newSegment + 1); a++) {nextAttribute += axeRule.axeselector[a];}
+        var nodes = document.querySelectorAll(axeRule.axeSelector[1]);
 
-        for (var k = 0; k < nodes.length; k++) {
-            nodes[k].setAttribute('data-axeselector', currentAttribute);
-            var symbol = axeRule.axeselector[newSegment].substring(1,2);
-            var node = nodes[k];
+        var currentAttribute = '';
+        for (var a = 1; a < newSegment; a++) {currentAttribute += axeRule.axeSelector[a];}
+
+        var nextAttribute = '';
+        for (var a = 1; a < (newSegment + 1); a++) {nextAttribute += axeRule.axeSelector[a];}
+
+        var symbol = axeRule.axeSelector[newSegment].substring(1,2);
+        var selectorFragment = getSelectorFragment(newSegment);
+
+
+
+        for (var j = 0; j < nodes.length; j++) {
+            nodes[j].setAttribute('data-axeSelector', currentAttribute);
+            var node = nodes[j];
             var targetElements = activateSymbol(symbol, node);
-            var testtestNode = axeRule.axeselector[newSegment].substring(3);
+            var needle = axeRule.axeSelector[newSegment].substring(3);
 
             targetElements.forEach(function(targetElement){
-                if (targetElement[nodeProperties(testtestNode).label] === nodeProperties(testtestNode).name) {
-                    targetElement.setAttribute('data-axeselector', nextAttribute);
+                if (targetElement[nodeProperties(needle).label] === nodeProperties(needle).name) {
+                    targetElement.setAttribute('data-axeSelector', nextAttribute);
+                }
+            });
+        }
+
+    segment = newSegment;
+    selectorFragment = getSelectorFragment(segment);
+
+    }
+
+    
+    // DEAL WITH COMPLEX SELECTORS
+
+    while (axeRule.axeSelector.length > (segment + 2)) {
+        var newSegment = (segment + 2);
+        var symbol = axeRule.axeSelector[newSegment].substring(1,2);
+        var nodes = document.querySelectorAll(selectorFragment);
+        var currentAttribute = '';
+        for (var a = 1; a < newSegment; a++) {currentAttribute += axeRule.axeSelector[a];}
+        var nextAttribute = '';
+        for (var a = 1; a < (newSegment + 1); a++) {nextAttribute += axeRule.axeSelector[a];}
+
+
+
+        for (var j = 0; j < nodes.length; j++) {
+            nodes[j].setAttribute('data-axeSelector', currentAttribute);
+            var node = nodes[j];
+            var targetElements = activateSymbol(symbol, node);
+            var needle = axeRule.axeSelector[newSegment].substring(3);
+
+            targetElements.forEach(function(targetElement){
+                if (targetElement[nodeProperties(needle).label] === nodeProperties(needle).name) {
+                    targetElement.setAttribute('data-axeSelector', nextAttribute);
                 }
             });
         }
@@ -284,7 +297,7 @@ function axeStyle(axeRule) {
         selectorFragment = getSelectorFragment(segment);
     }
 
-    document.styleSheets[0].insertRule(selectorFragment + '{' + styleString(axeRule.styles) + '}', axeRule.index);
+    document.styleSheets[0].insertRule(selectorFragment + '{' + styleString(axeRule.axeStyles) + '}', axeRule.axeIndex);
 }
 
-axe.rules.forEach(function(axeRule){axeStyle(axeRule);});
+axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
