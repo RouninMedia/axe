@@ -108,6 +108,8 @@ for (var i = 0; i < stylesheets.length; i++) {
 
 console.log(axe);
 
+var segment = 0;
+var selectorFragment = axeRule.axeSelector[1];
 
 function nodeProperties(node) {
     var nodeProperties = {};
@@ -224,60 +226,17 @@ function getSelectorFragment(segment) {
     return selectorFragment;
 }
 
-
-var segment = 0;
-
-// WHAT IS THE SHORTEST LENGTH axeRule.axeSelector can be?
-
 function axeStyle(axeRule) {
-
-    // DEAL WITH SIMPLE SELECTORS
-
-    while (segment === 0) {
-        var newSegment = (segment + 2);
-        var nodes = document.querySelectorAll(axeRule.axeSelector[1]);
-
-        var currentAttribute = '';
-        for (var a = 1; a < newSegment; a++) {currentAttribute += axeRule.axeSelector[a];}
-
-        var nextAttribute = '';
-        for (var a = 1; a < (newSegment + 1); a++) {nextAttribute += axeRule.axeSelector[a];}
-
-        var symbol = axeRule.axeSelector[newSegment].substring(1,2);
-        var selectorFragment = getSelectorFragment(newSegment);
-
-
-
-        for (var j = 0; j < nodes.length; j++) {
-            nodes[j].setAttribute('data-axeSelector', currentAttribute);
-            var node = nodes[j];
-            var targetElements = activateSymbol(symbol, node);
-            var needle = axeRule.axeSelector[newSegment].substring(3);
-
-            targetElements.forEach(function(targetElement){
-                if (targetElement[nodeProperties(needle).label] === nodeProperties(needle).name) {
-                    targetElement.setAttribute('data-axeSelector', nextAttribute);
-                }
-            });
-        }
-
-    segment = newSegment;
-    selectorFragment = getSelectorFragment(segment);
-
-    }
-
-    
-    // DEAL WITH COMPLEX SELECTORS
 
     while (axeRule.axeSelector.length > (segment + 2)) {
         var newSegment = (segment + 2);
         var symbol = axeRule.axeSelector[newSegment].substring(1,2);
         var nodes = document.querySelectorAll(selectorFragment);
+
         var currentAttribute = '';
         for (var a = 1; a < newSegment; a++) {currentAttribute += axeRule.axeSelector[a];}
         var nextAttribute = '';
         for (var a = 1; a < (newSegment + 1); a++) {nextAttribute += axeRule.axeSelector[a];}
-
 
 
         for (var j = 0; j < nodes.length; j++) {
