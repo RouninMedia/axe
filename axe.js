@@ -57,8 +57,8 @@ for (var i = 0; i < stylesheets.length; i++) {
             axeRule['axeIndex'] = stylesheetRules[j];
 
             var stone = stylesheetRules[(j+1)];
-            stone = stone.replace(/(\w)\s+([\w|\.|\#])/g,'$1; ;$2');
-            stone = stone.replace(/(\w)\s*?([\>|\+|\~|\<|\^|\?|\!|\%|\|])\s*?([\w|\.|\#])/g,'$1;$2;$3');
+            stone = stone.replace(/(\w)\s+([\w\.\#])/g,'$1; ;$2');
+            stone = stone.replace(/(\w)\s*?([\>\+\~\<\^\?\!\%\|])\s*?([\w\.\#])/g,'$1;$2;$3');
             bronze = stone.split(';');
 
             var iron = '';
@@ -66,6 +66,11 @@ for (var i = 0; i < stylesheets.length; i++) {
             for (var a = 0; a < bronze.length; a++) {
 
                 if (symbols.indexOf(bronze[a]) > -1) {
+
+                    if (symbols.indexOf(bronze[(a - 2)]) > -1) {
+                        iron += ';';
+                    }
+
                     iron += ';' + ' ' + bronze[a] + ' ' + bronze[(a + 1)];
                     
                     if ((a < (bronze.length - 2)) && (symbols.indexOf(bronze[(a + 2)]) < 0)) {
@@ -108,9 +113,6 @@ for (var i = 0; i < stylesheets.length; i++) {
 
 console.log(axe);
 
-var segment = 0;
-var selectorFragment = axeRule.axeSelector[1];
-
 function nodeProperties(node) {
     var nodeProperties = {};
     
@@ -148,12 +150,45 @@ function styleString(styleObject) {
 }
 
 
-function ancestorImmediate(element) {return element.parentNode;}
-function siblingImmediatePrevious(element) {return element.previousElementSibling;}
-function siblingImmediate(element) {return [element.previousElementSibling, element.nextElementSibling];}
+function siblingImmediatePrevious(element) {
+    var immediatePreviousSibling = [];
+
+    for (var i = 0; i < element.parentNode.children.length; i++) {
+        if (element.parentNode.children[i] !== element.previousElementSibling) continue;
+        if (element.parentNode.children[i] === element) break;
+        immediatePreviousSibling[0] = element.parentNode.children[i];
+    }
+
+    return immediatePreviousSibling;
+}
+
+
+function siblingImmediate(element) {
+    var immediateSiblings = [];
+
+    for (var i = 0; i < element.parentNode.children.length; i++) {
+
+        if (element.parentNode.children[i] === element.previousElementSibling) {
+            immediateSiblings.push(element.parentNode.children[i]);
+        }
+
+        if (element.parentNode.children[i] === element.nextElementSibling) {
+            immediateSiblings.push(element.parentNode.children[i]); break;
+        }
+    }
+
+    return immediateSiblings;
+}
+
+
+function ancestorImmediate(element) {
+    var immediateAncestor = [];
+    immediateAncestor[0] = element.parentNode;
+    return immediateAncestor;
+}
+
 
 function ancestorAll(element) {
-
     var allAncestors = [];
     var ancestor = element.parentNode;
 
@@ -198,11 +233,11 @@ function activateSymbol(symbol, node) {
     var targetElements = [];
 
     switch (symbol) {
-        case ('<') : targetElements[0] = ancestorImmediate(node); break;
+        case ('<') : targetElements = ancestorImmediate(node); break;
         case ('^') : targetElements = ancestorAll(node); break;
         case ('%') : targetElements = siblingImmediate(node); break;
         case ('|') : targetElements = siblingAll(node); break;
-        case ('?') : targetElements[0] = siblingImmediatePrevious(node); break;
+        case ('?') : targetElements = siblingImmediatePrevious(node); break;
         case ('!') : targetElements = siblingAllPrevious(node); break;
     }
 
@@ -210,23 +245,10 @@ function activateSymbol(symbol, node) {
 }
 
 
-function getSelectorFragment(segment) {
-    var i = 1;
-    var selectorFragment = '[data-axeSelector="';
-
-    while (i < segment) {
-        selectorFragment += axeRule.axeSelector[i];
-        i++;
-    }
-
-    selectorFragment += axeRule.axeSelector[i];
-    i++;
-
-    selectorFragment += '"]' + (axeRule.axeSelector[i] ? axeRule.axeSelector[i] : '');
-    return selectorFragment;
-}
-
 function axeStyle(axeRule) {
+
+    var segment = 0;
+    var selectorFragment = axeRule.axeSelector[1];
 
     while (axeRule.axeSelector.length > (segment + 2)) {
         var newSegment = (segment + 2);
@@ -240,8 +262,8 @@ function axeStyle(axeRule) {
 
 
         for (var j = 0; j < nodes.length; j++) {
-            nodes[j].setAttribute('data-axeSelector', currentAttribute);
             var node = nodes[j];
+            node.setAttribute('data-axeSelector', currentAttribute);
             var targetElements = activateSymbol(symbol, node);
             var needle = axeRule.axeSelector[newSegment].substring(3);
 
@@ -251,12 +273,17 @@ function axeStyle(axeRule) {
                 }
             });
         }
-
+        
+        var s = 1;
         segment = newSegment;
-        selectorFragment = getSelectorFragment(segment);
+        selectorFragment = '[data-axeSelector="';
+        while (s < segment) {selectorFragment += axeRule.axeSelector[s]; s++;}
+        selectorFragment += axeRule.axeSelector[s]; s++;
+        selectorFragment += '"]' + (axeRule.axeSelector[s] ? axeRule.axeSelector[s] : '');
     }
 
     document.styleSheets[0].insertRule(selectorFragment + '{' + styleString(axeRule.axeStyles) + '}', axeRule.axeIndex);
 }
+
 
 axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
