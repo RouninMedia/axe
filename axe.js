@@ -4,15 +4,15 @@ var stylesheets = document.getElementsByTagName('style');
 
 for (var i = 0; i < stylesheets.length; i++) {
 
-    var stylesheet = stylesheets[i].textContent;
-    stylesheet = stylesheet.replace(/\n/g,' ');
-    stylesheet = stylesheet.replace(/\/\*.*?\*\//g,'');
-    stylesheet = stylesheet.replace(/[\s]*{/g,'{');
-    stylesheet = stylesheet.replace(/[\s]*}/g,'}');
-    stylesheet = stylesheet.replace(/{[\s]*/g,'{');
-    stylesheet = stylesheet.replace(/}[\s]*/g,'}');
+    var stylesheetText = stylesheets[i].textContent;
+    stylesheetText = stylesheetText.replace(/\n/g,' ');
+    stylesheetText = stylesheetText.replace(/\/\*.*?\*\//g,'');
+    stylesheetText = stylesheetText.replace(/[\s]*{/g,'{');
+    stylesheetText = stylesheetText.replace(/\;?[\s]*}/g,'}');
+    stylesheetText = stylesheetText.replace(/{[\s]*/g,'{');
+    stylesheetText = stylesheetText.replace(/}[\s]*/g,'}');
 
-    var stylesheet = stylesheet.split(/{|}|;/);
+    var stylesheet = stylesheetText.split(/{|}|;/);
     var stylesheetRules = [];
     var ruleIndex = 0;
 
@@ -31,15 +31,33 @@ for (var i = 0; i < stylesheets.length; i++) {
                  stylesheet[j].match(/\:active/g) ||
                  stylesheet[j].match(/\:focus/g) ||
                  stylesheet[j].match(/\:target/g)) {
+
                 stylesheetRules[stylesheetRules.length] = ruleIndex;
+
                 ruleIndex++;
+
+                // SEPARATE OUT COMMA-SEPARATED RULE-GROUPS
+
+                if (stylesheet[j].match(/\,/g)) {
+                    var ruleCount = (stylesheet[j].match(/\,/g).length + 1);
+                    var ruleGroup = stylesheet[j].split(',');
+
+                    for (var r = 0; r < ruleCount; r++) {
+                        var splicePosition = ((r * 2) + 1);
+                        ruleGroup.splice(splicePosition, 0, stylesheet[(j+1)]);
+                    }
+
+                    stylesheet.splice(j, 2, ...ruleGroup);
+                }
             }
 
             stylesheetRules[stylesheetRules.length] = stylesheet[j].replace(/([\s]*:[\s]*)/,':').trim();
         }
     }
 
+
     console.log(stylesheetRules);
+
 
     // BUILD AXE RULES OBJECT
 
@@ -263,20 +281,19 @@ function axeStyle(axeRule) {
 
         for (var j = 0; j < nodes.length; j++) {
             var node = nodes[j];
-            node.setAttribute('data-axeSelector', currentAttribute);
+            node.setAttribute('data-axeSelector-' + axeRule.axeIndex, currentAttribute);
             var targetElements = activateSymbol(symbol, node);
             var needle = axeRule.axeSelector[newSegment].substring(3);
 
             targetElements.forEach(function(targetElement){
                 if (targetElement[nodeProperties(needle).label] === nodeProperties(needle).name) {
-                    targetElement.setAttribute('data-axeSelector', nextAttribute);
+                    targetElement.setAttribute('data-axeSelector-' + axeRule.axeIndex, nextAttribute);
                 }
             });
         }
-        
         var s = 1;
         segment = newSegment;
-        selectorFragment = '[data-axeSelector="';
+        selectorFragment = '[data-axeSelector-' + axeRule.axeIndex + ' ="';
         while (s < segment) {selectorFragment += axeRule.axeSelector[s]; s++;}
         selectorFragment += axeRule.axeSelector[s]; s++;
         selectorFragment += '"]' + (axeRule.axeSelector[s] ? axeRule.axeSelector[s] : '');
