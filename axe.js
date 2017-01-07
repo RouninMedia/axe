@@ -271,32 +271,29 @@ function axeStyle(axeRule) {
     while (axeRule.axeSelector.length > (segment + 2)) {
         var newSegment = (segment + 2);
         var symbol = axeRule.axeSelector[newSegment].substring(1,2);
-        var nodes = document.querySelectorAll(selectorFragment);
+        var nodes = document.querySelectorAll(selectorFragment.replace(/([^\:])\:(.+)/,'$1'));
 
         var currentAttribute = '';
         for (var a = 1; a < newSegment; a++) {currentAttribute += axeRule.axeSelector[a];}
         var nextAttribute = '';
         for (var a = 1; a < (newSegment + 1); a++) {nextAttribute += axeRule.axeSelector[a];}
 
-
         for (var j = 0; j < nodes.length; j++) {
             var node = nodes[j];
-            node.setAttribute('data-axeSelector-' + axeRule.axeIndex, currentAttribute);
+            node.setAttribute('data-axeSelector-' + axeRule.axeIndex, currentAttribute.replace(/([^\:])\:([^\:])/,'$1&$2'));
             var targetElements = activateSymbol(symbol, node);
             var needle = axeRule.axeSelector[newSegment].substring(3);
 
             targetElements.forEach(function(targetElement){
                 if (targetElement[nodeProperties(needle).label] === nodeProperties(needle).name) {
-                    targetElement.setAttribute('data-axeSelector-' + axeRule.axeIndex, nextAttribute);
+                    targetElement.setAttribute('data-axeSelector-' + axeRule.axeIndex, nextAttribute.replace(/([^\:])\:([^\:])/,'$1&$2'));
                 }
             });
         }
-        var s = 1;
+
         segment = newSegment;
-        selectorFragment = '[data-axeSelector-' + axeRule.axeIndex + ' ="';
-        while (s < segment) {selectorFragment += axeRule.axeSelector[s]; s++;}
-        selectorFragment += axeRule.axeSelector[s]; s++;
-        selectorFragment += '"]' + (axeRule.axeSelector[s] ? axeRule.axeSelector[s] : '');
+        selectorFragment = '[data-axeSelector-' + axeRule.axeIndex + ' ="' + nextAttribute + '"]';
+        selectorFragment += (axeRule.axeSelector[(segment + 1)] ? axeRule.axeSelector[(segment + 1)] : '');
     }
 
     document.styleSheets[0].insertRule(selectorFragment + '{' + styleString(axeRule.axeStyles) + '}', axeRule.axeIndex);
@@ -304,3 +301,15 @@ function axeStyle(axeRule) {
 
 
 axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
+
+pseudoHover();
+
+function pseudoHover() {
+
+    var elements = document.querySelectorAll('[data-axeselector-5="li&hover ? li"]');
+
+    elements.forEach(function(element){
+        element.addEventListener('mouseover', function(){element.previousElementSibling.setAttribute('data-axeselector-5','li:hover ? li');}, false);
+    });
+
+}
