@@ -107,9 +107,18 @@ for (var i = 0; i < stylesheets.length; i++) {
                 else {
                     iron += ' ' + bronze[a];
                 }
+
+                if ((symbols.indexOf(bronze[(a - 1)]) < 0) && (bronze[a].indexOf(':hover') > -1) && (symbols.indexOf(bronze[(a + 1)]) < 0)) {
+                    iron += ';';
+
+                    if (symbols.indexOf(bronze[(a + 1)]) < 0) {
+                        iron += ';';
+                    }
+                }
             }
 
             axeRule['axeSelector'] = iron.split(';');
+
             axeRule.axeSelector.unshift(stylesheetRules[(j+1)]);
 
             var k = j + 2;
@@ -269,9 +278,10 @@ function axeStyle(axeRule) {
     var selectorFragment = axeRule.axeSelector[1];
 
     while (axeRule.axeSelector.length > (segment + 2)) {
+
         var newSegment = (segment + 2);
         var symbol = axeRule.axeSelector[newSegment].substring(1,2);
-        var nodes = document.querySelectorAll(selectorFragment.replace(/([^\:])\:(.+)/,'$1'));
+        var nodes = document.querySelectorAll(selectorFragment.replace(/([^\:]+)\:.+/,'$1'));
 
         var currentAttribute = '';
         for (var a = 1; a < newSegment; a++) {currentAttribute += axeRule.axeSelector[a];}
@@ -280,36 +290,95 @@ function axeStyle(axeRule) {
 
         for (var j = 0; j < nodes.length; j++) {
             var node = nodes[j];
-            node.setAttribute('data-axeSelector-' + axeRule.axeIndex, currentAttribute.replace(/([^\:])\:([^\:])/,'$1&$2'));
-            var targetElements = activateSymbol(symbol, node);
-            var needle = axeRule.axeSelector[newSegment].substring(3);
 
+            if ((segment === 0) || (axeRule.axeSelector[(segment + 1)].match(/[\:]/))) {
+                node.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + segment).slice(-2), currentAttribute.replace(/([^\:])\:([^\:])/,'$1&$2'));
+            }
+
+            var needle = axeRule.axeSelector[newSegment].substring(3).replace(/\:[^\s]+/g, '');
+
+            var targetElements = activateSymbol(symbol, node);
             targetElements.forEach(function(targetElement){
                 if (targetElement[nodeProperties(needle).label] === nodeProperties(needle).name) {
-                    targetElement.setAttribute('data-axeSelector-' + axeRule.axeIndex, nextAttribute.replace(/([^\:])\:([^\:])/,'$1&$2'));
+                    targetElement.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2), nextAttribute.replace(/([^\:])\:([^\:])/,'$1&$2'));
+                
+                    /* targetElement.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + Math.ceil((segment + 1)/2)).slice(-2), nextAttribute.replace(/([^\:])\:([^\:])/,'$1&$2')); */
                 }
             });
         }
 
+        selectorFragment = '[data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2) + ' ="' + nextAttribute + '"]';
+        selectorFragment += (axeRule.axeSelector[(newSegment + 1)] ? axeRule.axeSelector[(newSegment + 1)] : '');
         segment = newSegment;
-        selectorFragment = '[data-axeSelector-' + axeRule.axeIndex + ' ="' + nextAttribute + '"]';
-        selectorFragment += (axeRule.axeSelector[(segment + 1)] ? axeRule.axeSelector[(segment + 1)] : '');
     }
 
     document.styleSheets[0].insertRule(selectorFragment + '{' + styleString(axeRule.axeStyles) + '}', axeRule.axeIndex);
+
+    if (axeRule.axeSelector[0].match(/\:click|\:hover/)) {
+        var pseudoElement = axeRule.axeSelector[0].replace(/[^\:]+(\:[^\s]+).*/,'$1');
+
+        switch (pseudoElement) {
+            case(':click') : pseudoClick(axeRule); break;
+            case(':hover') : pseudoHover(axeRule); break;
+        }
+    }
 }
 
 
 axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
 
-pseudoHover();
 
-function pseudoHover() {
 
-    var elements = document.querySelectorAll('[data-axeselector-5="li&hover ? li"]');
+
+function pseudoHover(axeRule) {
+
+    var fragment = '[data-axe-' + ((axeRule.axeIndex * 100) + (axeRule.axeSelector.length - 2)) + ' ="' + axeRule.axeSelector[0].replace(/([^\:])\:([^\:])/,'$1&$2') + '"]';
+    
+        var fragments = document.querySelectorAll(fragment);
+
+        for (var f = 0; f < fragments.length; f++) {
+        fragments[f].style.color = 'rgb(255,255,0)';
+        fragments[f].style.fontWeight = 'bold';
+    }
+
+
+    for (var s = (axeRule.axeSelector.length - 1); s > 0; s--) {
+
+        if (axeRule.axeSelector[s].match(/\:hover$/)) {
+            var query = '';
+            for (var q = 1; q < (s + 1); q++) {
+                query += axeRule.axeSelector[q];
+            }
+
+            query = query.replace(/([^\:])\:([^\:])/,'$1&$2').trim();
+            var q = 0;
+            var elementFound = false;
+            
+            while (elementFound !== true) {
+                segmentNumber = ((axeRule.axeIndex * 100) + q);
+                var elementsFound = document.querySelectorAll('[data-axe-' + segmentNumber + '="' + query + '"]').length;
+            
+                if (elementsFound > 0) {
+                    query = '[data-axe-' + segmentNumber + '="' + query + '"]';
+                    elementFound = true;
+                }
+
+                q++;
+            }
+        }
+    }
+
+    var elements = document.querySelectorAll(query);
 
     elements.forEach(function(element){
-        element.addEventListener('mouseover', function(){element.previousElementSibling.setAttribute('data-axeselector-5','li:hover ? li');}, false);
+        element.style.border = '3px solid red';
+        element.addEventListener('mouseover', function(){element.setAttribute('data-axeselector-5','li:hover ? li');}, false);
+        element.addEventListener('mouseout', function(){element.setAttribute('data-axeselector-5','li&hover ? li');}, false);
     });
 
+}
+
+
+for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
+console.log(document.styleSheets[0].cssRules[i]);
 }
