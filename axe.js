@@ -292,7 +292,7 @@ function axeStyle(axeRule) {
             var node = nodes[j];
 
             if ((segment === 0) || (axeRule.axeSelector[(segment + 1)].match(/[\:]/))) {
-                node.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + segment).slice(-2), currentAttribute.replace(/([^\:])\:([^\:])/,'$1&$2'));
+                node.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + segment).slice(-2), currentAttribute.replace(':','&'));
             }
 
             var needle = axeRule.axeSelector[newSegment].substring(3).replace(/\:[^\s]+/g, '');
@@ -300,9 +300,9 @@ function axeStyle(axeRule) {
             var targetElements = activateSymbol(symbol, node);
             targetElements.forEach(function(targetElement){
                 if (targetElement[nodeProperties(needle).label] === nodeProperties(needle).name) {
-                    targetElement.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2), nextAttribute.replace(/([^\:])\:([^\:])/,'$1&$2'));
+                    targetElement.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2), nextAttribute.replace(':','&'));
                 
-                    /* targetElement.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + Math.ceil((segment + 1)/2)).slice(-2), nextAttribute.replace(/([^\:])\:([^\:])/,'$1&$2')); */
+                    /* targetElement.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + Math.ceil((segment + 1)/2)).slice(-2), nextAttribute.replace(':','&')); */
                 }
             });
         }
@@ -332,50 +332,37 @@ axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
 
 function pseudoHover(axeRule) {
 
-    var fragment = '[data-axe-' + ((axeRule.axeIndex * 100) + (axeRule.axeSelector.length - 2)) + ' ="' + axeRule.axeSelector[0].replace(/([^\:])\:([^\:])/,'$1&$2') + '"]';
+    var axeRuleQuery = '[data-axe-' + ((axeRule.axeIndex * 100) + (axeRule.axeSelector.length - 2)) + '="' + axeRule.axeSelector[0].replace(':','&') + '"]';
+
+    var axeRuleElements = document.querySelectorAll(axeRuleQuery);
     
-        var fragments = document.querySelectorAll(fragment);
+    var activeFragment = axeRuleQuery.replace(/.*(\s[^\&]+\&hover.*)\"\].*/,'$1').trim();
+    activeFragment = activeFragment.replace('&',':');
+    activeFragment = activeFragment.replace('<','>');
+    activeFragment = activeFragment.replace('^',' ');
+    activeFragment = activeFragment.replace('?','+');
+    activeFragment = activeFragment.replace('!','~');
+    activeFragment = activeFragment.replace('%','@');
+    activeFragment = activeFragment.replace('|','@');
+    activeFragment = activeFragment.split(' ');
+    activeFragment.reverse();
+    activeFragment.shift();
+    activeFragment = ' ' + activeFragment.join(' ');
+    activeFragment = activeFragment.replace(':hover','');
 
-        for (var f = 0; f < fragments.length; f++) {
-        fragments[f].style.color = 'rgb(255,255,0)';
-        fragments[f].style.fontWeight = 'bold';
-    }
 
+    var axeTargets = document.querySelectorAll(axeRuleQuery);
 
-    for (var s = (axeRule.axeSelector.length - 1); s > 0; s--) {
+    axeTargets.forEach(function(axeTarget, i){
+        axeTarget.setAttribute('data-axetarget','test' + i);
+        var axeBlades = document.querySelectorAll('[data-axetarget="test' + i + '"]' + activeFragment);
 
-        if (axeRule.axeSelector[s].match(/\:hover$/)) {
-            var query = '';
-            for (var q = 1; q < (s + 1); q++) {
-                query += axeRule.axeSelector[q];
-            }
-
-            query = query.replace(/([^\:])\:([^\:])/,'$1&$2').trim();
-            var q = 0;
-            var elementFound = false;
-            
-            while (elementFound !== true) {
-                segmentNumber = ((axeRule.axeIndex * 100) + q);
-                var elementsFound = document.querySelectorAll('[data-axe-' + segmentNumber + '="' + query + '"]').length;
-            
-                if (elementsFound > 0) {
-                    query = '[data-axe-' + segmentNumber + '="' + query + '"]';
-                    elementFound = true;
-                }
-
-                q++;
-            }
-        }
-    }
-
-    var elements = document.querySelectorAll(query);
-
-    elements.forEach(function(element){
-        element.style.border = '3px solid red';
-        element.addEventListener('mouseover', function(){element.setAttribute('data-axeselector-5','li:hover ? li');}, false);
-        element.addEventListener('mouseout', function(){element.setAttribute('data-axeselector-5','li&hover ? li');}, false);
+        axeBlades.forEach(function(axeBlade, j){
+            axeBlade.setAttribute('data-axeblade','testblade' + (i + j));
+            axeBlade.addEventListener('mouseover', function(){axeTarget.style.backgroundColor = 'rgb(0,0,191)';}, false);
+            axeBlade.addEventListener('mouseout', function(){axeTarget.removeAttribute('style');}, false);
+        });
     });
-
 }
 
 
