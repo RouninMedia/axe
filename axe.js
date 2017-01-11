@@ -43,6 +43,13 @@ for (var i = 0; i < stylesheets.length; i++) {
                     var ruleGroup = stylesheet[j].split(',');
 
                     for (var r = 0; r < ruleCount; r++) {
+                        if (ruleGroup[r].match(/\?/) === null) {
+                            var rulePosition = ((ruleIndex - 1) > document.styleSheets[0].cssRules.length ? document.styleSheets[0].cssRules.length : (ruleIndex - 1));
+                            document.styleSheets[0].insertRule(ruleGroup[r] + '{' + stylesheet[(j + 1)] + '}', rulePosition);
+                        }
+                    }
+
+                    for (var r = 0; r < ruleCount; r++) {
                         var splicePosition = ((r * 2) + 1);
                         ruleGroup.splice(splicePosition, 0, stylesheet[(j+1)]);
                     }
@@ -301,8 +308,6 @@ function axeStyle(axeRule) {
             targetElements.forEach(function(targetElement){
                 if (targetElement[nodeProperties(needle).label] === nodeProperties(needle).name) {
                     targetElement.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2), nextAttribute.replace(':','&'));
-                
-                    /* targetElement.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + Math.ceil((segment + 1)/2)).slice(-2), nextAttribute.replace(':','&')); */
                 }
             });
         }
@@ -332,11 +337,11 @@ axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
 
 function pseudoHover(axeRule) {
 
-    var axeRuleQuery = '[data-axe-' + ((axeRule.axeIndex * 100) + (axeRule.axeSelector.length - 2)) + '="' + axeRule.axeSelector[0].replace(':','&') + '"]';
-
-    var axeRuleElements = document.querySelectorAll(axeRuleQuery);
+    var dataAttribute = 'axe-' + ((axeRule.axeIndex * 100) + (axeRule.axeSelector.length - 2));
+    var axeRuleQuery = '[data-' + dataAttribute + '="' + axeRule.axeSelector[0].replace(':','&') + '"]';
+    var axeTargets = document.querySelectorAll(axeRuleQuery);
     
-    var activeFragment = axeRuleQuery.replace(/.*(\s[^\&]+\&hover.*)\"\].*/,'$1').trim();
+    var activeFragment = axeRule.axeSelector[0];
     activeFragment = activeFragment.replace('&',':');
     activeFragment = activeFragment.replace('<','>');
     activeFragment = activeFragment.replace('^',' ');
@@ -345,23 +350,24 @@ function pseudoHover(axeRule) {
     activeFragment = activeFragment.replace('%','@');
     activeFragment = activeFragment.replace('|','@');
     activeFragment = activeFragment.split(' ');
-    activeFragment.reverse();
+    activeFragment = activeFragment.reverse();
     activeFragment.shift();
     activeFragment = ' ' + activeFragment.join(' ');
-    activeFragment = activeFragment.replace(':hover','');
-
-
-    var axeTargets = document.querySelectorAll(axeRuleQuery);
+    activeFragment = activeFragment.replace(/\:hover.*/,'');
 
     axeTargets.forEach(function(axeTarget, i){
-        axeTarget.setAttribute('data-axetarget','test' + i);
-        var axeBlades = document.querySelectorAll('[data-axetarget="test' + i + '"]' + activeFragment);
+        axeTarget.setAttribute('data-axetarget', ((axeRule.axeIndex * 10) + i));
+        var axeBlades = document.querySelectorAll('[data-axetarget="' + ((axeRule.axeIndex * 10) + i) + '"]' + activeFragment);
 
-        axeBlades.forEach(function(axeBlade, j){
-            axeBlade.setAttribute('data-axeblade','testblade' + (i + j));
-            axeBlade.addEventListener('mouseover', function(){axeTarget.style.backgroundColor = 'rgb(0,0,191)';}, false);
-            axeBlade.addEventListener('mouseout', function(){axeTarget.removeAttribute('style');}, false);
+        axeBlades.forEach(function(axeBlade){
+            axeBlade.setAttribute('data-axeblade', ((axeRule.axeIndex * 10) + i));
+            var currentTarget = document.querySelector('[data-axetarget="' + ((axeRule.axeIndex * 10) +  i) + '"]');
+            axeBlade.addEventListener('mouseover', function(){currentTarget.dataset[dataAttribute] = currentTarget.dataset[dataAttribute].replace('&',':');}, false);
+            axeBlade.addEventListener('mouseout', function(){currentTarget.dataset[dataAttribute] = currentTarget.dataset[dataAttribute].replace(':','&');}, false);
+            axeBlade.removeAttribute('data-axeblade');
         });
+
+        axeTarget.removeAttribute('data-axetarget');
     });
 }
 
