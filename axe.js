@@ -1,6 +1,60 @@
 // CONVERT STYLESHEET INTO ARRAY
 
+var forgedSelector = '';
 var stylesheets = document.getElementsByTagName('style');
+
+
+function separateQuery(query) {
+    query = query.replace(/(\w)\s+([\w\.\#])/g,'$1; ;$2');
+    query = query.replace(/(\w)\s*?([\>\+\~\<\^\?\!\%\|])\s*?([\w\.\#])/g,'$1;$2;$3');
+    query = query.split(';');
+    return query;
+}
+
+
+function forgeSelector(query) {
+
+    forgedSelector = '';
+
+    for (var a = 0; a < query.length; a++) {
+
+        if (symbols.indexOf(query[a]) > -1) {
+
+            if (symbols.indexOf(query[(a - 2)]) > -1) {
+                forgedSelector += ';';
+            }
+
+            forgedSelector += ';' + ' ' + query[a] + ' ' + query[(a + 1)];
+                    
+            if ((a < (query.length - 2)) && (symbols.indexOf(query[(a + 2)]) < 0)) {
+                forgedSelector += ';';
+            }
+
+            if (a < (query.length - 1)) {
+                a++;
+            }
+        }
+                    
+        else if ((a === 0) || (query[a] === ' ') || (query[(a - 1)] === ' ')) {
+            forgedSelector += query[a];
+        }
+
+        else {
+            forgedSelector += ' ' + query[a];
+        }
+
+        if ((symbols.indexOf(query[(a - 1)]) < 0) && (query[a].indexOf(':hover') > -1) && (symbols.indexOf(query[(a + 1)]) < 0)) {
+            forgedSelector += ';';
+
+            if (symbols.indexOf(query[(a + 1)]) < 0) {
+                forgedSelector += ';';
+            }
+        }
+    }
+
+    return forgedSelector;
+}
+
 
 for (var i = 0; i < stylesheets.length; i++) {
 
@@ -80,52 +134,9 @@ for (var i = 0; i < stylesheets.length; i++) {
             axe.axeRules[axeRuleIndex] = {};
             var axeRule = axe.axeRules[axeRuleIndex];
             axeRule['axeIndex'] = stylesheetRules[j];
-
-            var stone = stylesheetRules[(j+1)];
-            stone = stone.replace(/(\w)\s+([\w\.\#])/g,'$1; ;$2');
-            stone = stone.replace(/(\w)\s*?([\>\+\~\<\^\?\!\%\|])\s*?([\w\.\#])/g,'$1;$2;$3');
-            bronze = stone.split(';');
-
-            var iron = '';
-
-            for (var a = 0; a < bronze.length; a++) {
-
-                if (symbols.indexOf(bronze[a]) > -1) {
-
-                    if (symbols.indexOf(bronze[(a - 2)]) > -1) {
-                        iron += ';';
-                    }
-
-                    iron += ';' + ' ' + bronze[a] + ' ' + bronze[(a + 1)];
-                    
-                    if ((a < (bronze.length - 2)) && (symbols.indexOf(bronze[(a + 2)]) < 0)) {
-                        iron += ';';
-                    }
-
-                    if (a < (bronze.length - 1)) {
-                        a++;
-                    }
-                }
-                    
-                else if ((a === 0) || (bronze[a] === ' ') || (bronze[(a - 1)] === ' ')) {
-                    iron += bronze[a];
-                }
-
-                else {
-                    iron += ' ' + bronze[a];
-                }
-
-                if ((symbols.indexOf(bronze[(a - 1)]) < 0) && (bronze[a].indexOf(':hover') > -1) && (symbols.indexOf(bronze[(a + 1)]) < 0)) {
-                    iron += ';';
-
-                    if (symbols.indexOf(bronze[(a + 1)]) < 0) {
-                        iron += ';';
-                    }
-                }
-            }
-
-            axeRule['axeSelector'] = iron.split(';');
-
+            var bronze = separateQuery(stylesheetRules[(j+1)]);
+            forgeSelector(bronze);
+            axeRule['axeSelector'] = forgedSelector.split(';');
             axeRule.axeSelector.unshift(stylesheetRules[(j+1)]);
 
             var k = j + 2;
@@ -139,7 +150,7 @@ for (var i = 0; i < stylesheets.length; i++) {
             }
 
             axeRule['axeStyles'] = axeStyles;
-
+            axeRule['blades'] = [];
             axeRuleIndex++;
         }
     }
@@ -372,22 +383,68 @@ function pseudoHover(axeRule) {
     var axeTargets = document.querySelectorAll(axeRuleQuery);
     
     var activeFragment = axeRule.axeSelector[0];
-    activeFragment = activeFragment.replace(/\&/g,':');
-    activeFragment = activeFragment.replace(/\</g,'>');
-    activeFragment = activeFragment.replace(/\^/g,'');
-    activeFragment = activeFragment.replace(/\?/g,'+');
-    activeFragment = activeFragment.replace(/\!/g,'~');
-    activeFragment = activeFragment.replace(/\%/g,'@');
-    activeFragment = activeFragment.replace(/\|/g,'@');
+
+    activeFragment = activeFragment.replace(/\&/g,'@&');
+    activeFragment = activeFragment.replace(/\</g,'@<');
+    activeFragment = activeFragment.replace(/\^/g,'@^');
+    activeFragment = activeFragment.replace(/\?/g,'@?');
+    activeFragment = activeFragment.replace(/\!/g,'@!');
+    activeFragment = activeFragment.replace(/\%/g,'@%');
+    activeFragment = activeFragment.replace(/\|/g,'@|');
+
+    activeFragment = activeFragment.replace(/\+/g,'?');
+    activeFragment = activeFragment.replace(/\>/g,'<');
+    activeFragment = activeFragment.replace(/\~/g,'!');
+
+    activeFragment = activeFragment.replace(/\@\&/g,':');
+    activeFragment = activeFragment.replace(/\@\</g,'>');
+    activeFragment = activeFragment.replace(/\@\^/g,'');
+    activeFragment = activeFragment.replace(/\@\?/g,'+');
+    activeFragment = activeFragment.replace(/\@\!/g,'~');
+    activeFragment = activeFragment.replace(/\@\%/g,'@');
+    activeFragment = activeFragment.replace(/\@\|/g,'@');
+
     activeFragment = activeFragment.split(' ');
     activeFragment = activeFragment.reverse();
     activeFragment.shift();
     activeFragment = ' ' + activeFragment.join(' ');
     activeFragment = activeFragment.replace(/\:hover.*/,'');
 
+    activeFragment = separateQuery('activeFragment' + activeFragment);
+    activeFragment.shift();
+
     axeTargets.forEach(function(axeTarget, i){
+        axeRule.blades[axeRule.blades.length] = {};
         axeTarget.setAttribute('data-axetarget', ((axeRule.axeIndex * 100) + i));
-        var axeBlades = document.querySelectorAll('[data-axetarget="' + ((axeRule.axeIndex * 100) + i) + '"]' + activeFragment);
+        
+        var newBlade = activeFragment;
+        newBlade.unshift('[data-axetarget="' + ((axeRule.axeIndex * 100) + i) + '"]');
+        forgeSelector(newBlade);
+        axeRule.blades[(axeRule.blades.length - 1)]['bladeSelector'] = forgedSelector.split(';');
+        var bladeSelector = axeRule.blades[(axeRule.blades.length - 1)].bladeSelector;
+        bladeSelector.unshift(newBlade.join(' '));
+        console.log(bladeSelector);
+
+        /* var axeBlades = document.querySelectorAll(bladeSelector[0]); */
+        var axeBlades = [];
+
+        /* axeStyle(axeRule); */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         axeBlades.forEach(function(axeBlade){
             axeBlade.setAttribute('data-axeblade', ((axeRule.axeIndex * 100) + i));
