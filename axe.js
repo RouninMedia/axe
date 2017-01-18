@@ -415,22 +415,58 @@ function pseudoHover(axeRule) {
 
     axeTargets.forEach(function(axeTarget, i){
         axeRule.blades[axeRule.blades.length] = {};
-        axeTarget.setAttribute('data-axetarget', ((axeRule.axeIndex * 100) + i));
+        axeTarget.setAttribute('data-axetarget', axeRule.axeIndex + '-' + i);
         
         var newBlade = activeFragment;
-        newBlade.unshift('[data-axetarget="' + ((axeRule.axeIndex * 100) + i) + '"]');
+        if (i > 0) {newBlade.shift();}
+        newBlade.unshift('[data-axetarget="' + axeRule.axeIndex + '-' + i + '"]');
         forgeSelector(newBlade);
         axeRule.blades[(axeRule.blades.length - 1)]['bladeSelector'] = forgedSelector.split(';');
         var bladeSelector = axeRule.blades[(axeRule.blades.length - 1)].bladeSelector;
         bladeSelector.unshift(newBlade.join(' '));
-        console.log(bladeSelector);
-
-        /* var axeBlades = document.querySelectorAll(bladeSelector[0]); */
-        var axeBlades = [];
-
-        /* axeStyle(axeRule); */
 
 
+        function activateBlade(bladeSelector) {
+
+            var bladeSegment = 0;
+            var bladeSelectorFragment = bladeSelector[1];
+
+            while (bladeSelector.length > (bladeSegment + 2)) {
+
+                var bladeNewSegment = (bladeSegment + 2);
+                var bladeSymbol = bladeSelector[bladeNewSegment].substring(1,2);
+                var bladePattern = bladeSelectorFragment.replace(/([^\]]+\])([^\:]+)(\:[^\s]+)(.*)/,'$1$2$4');
+
+                var bladeNodes = document.querySelectorAll(bladePattern);
+
+                var bladeCurrentAttribute = '';
+                for (var a = 1; a < bladeNewSegment; a++) {bladeCurrentAttribute += bladeSelector[a];}
+                var bladeNextAttribute = '';
+                for (var a = 1; a < (bladeNewSegment + 1); a++) {bladeNextAttribute += bladeSelector[a];}
+
+                for (var j = 0; j < bladeNodes.length; j++) {
+                    var bladeNode = bladeNodes[j];
+
+                    var bladeNeedle = bladeSelector[bladeNewSegment].substring(3).replace(/\:[^\s]+/g, '');
+
+                    var bladeTargetElements = activateSymbol(bladeSymbol, bladeNode);
+                    bladeTargetElements.forEach(function(bladeTargetElement){
+                        if (bladeTargetElement[nodeProperties(bladeNeedle).label] === nodeProperties(bladeNeedle).name) {
+                            bladeTargetElement.setAttribute('data-bladesegment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment + 1)).slice(-2), bladeNextAttribute);
+                        }
+                    });
+                }
+
+                bladeSelectorFragment = '[data-bladesegment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment + 1)).slice(-2) + ' ="' + bladeNextAttribute + '"]';
+                bladeSelectorFragment += (bladeSelector[(bladeNewSegment + 1)] ? bladeSelector[(bladeNewSegment + 1)] : '');
+                bladeSegment = bladeNewSegment;
+            }
+
+            console.log(bladeSelectorFragment);
+            /* document.styleSheets[0].insertRule(selectorFragment + '{' + styleString(axeRule.axeStyles) + '}', axeRule.axeIndex); */
+        }
+
+        activateBlade(bladeSelector);
 
 
 
@@ -446,6 +482,8 @@ function pseudoHover(axeRule) {
 
 
 
+
+        /*
         axeBlades.forEach(function(axeBlade){
             axeBlade.setAttribute('data-axeblade', ((axeRule.axeIndex * 100) + i));
             var currentTarget = document.querySelector('[data-axetarget="' + ((axeRule.axeIndex * 100) +  i) + '"]');
@@ -454,7 +492,9 @@ function pseudoHover(axeRule) {
             axeBlade.removeAttribute('data-axeblade');
         });
 
-        axeTarget.removeAttribute('data-axetarget');
+        */
+
+        /* axeTarget.removeAttribute('data-axetarget'); */
     });
 }
 
