@@ -332,7 +332,7 @@ function axeStyle(axeRule) {
             });
         }
 
-        selectorFragment = '[data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2) + ' ="' + nextAttribute + '"]';
+        selectorFragment = '[data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2) + '="' + nextAttribute + '"]';
         selectorFragment += (axeRule.axeSelector[(newSegment + 1)] ? axeRule.axeSelector[(newSegment + 1)] : '');
         segment = newSegment;
     }
@@ -414,6 +414,7 @@ function pseudoHover(axeRule) {
     activeFragment.shift();
 
     axeTargets.forEach(function(axeTarget, i){
+
         axeRule.blades[axeRule.blades.length] = {};
         axeTarget.setAttribute('data-axetarget', axeRule.axeIndex + '-' + i);
         
@@ -452,35 +453,34 @@ function pseudoHover(axeRule) {
                     var bladeTargetElements = activateSymbol(bladeSymbol, bladeNode);
                     bladeTargetElements.forEach(function(bladeTargetElement){
                         if (bladeTargetElement[nodeProperties(bladeNeedle).label] === nodeProperties(bladeNeedle).name) {
-                            bladeTargetElement.setAttribute('data-bladesegment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment + 1)).slice(-2), bladeNextAttribute);
+                            bladeTargetElement.setAttribute('data-bladesegment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment + 1)).slice(-2),'');
                         }
                     });
                 }
 
-                bladeSelectorFragment = '[data-bladesegment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment + 1)).slice(-2) + ' ="' + bladeNextAttribute + '"]';
+                bladeSelectorFragment = '[data-bladesegment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment + 1)).slice(-2) + ']';
                 bladeSelectorFragment += (bladeSelector[(bladeNewSegment + 1)] ? bladeSelector[(bladeNewSegment + 1)] : '');
                 bladeSegment = bladeNewSegment;
             }
 
-            console.log(bladeSelectorFragment);
-            /* document.styleSheets[0].insertRule(selectorFragment + '{' + styleString(axeRule.axeStyles) + '}', axeRule.axeIndex); */
+            var axeBlades = document.querySelectorAll(bladeSelectorFragment);
+
+            axeBlades.forEach(function(axeBlade){
+                axeBlade.setAttribute('data-axeblade',axeRule.axeIndex + '-' + i);
+                axeBlade.addEventListener('mouseover', function(){axeTarget.dataset[dataAttribute] = axeTarget.dataset[dataAttribute].replace('&',':');}, false);
+                axeBlade.addEventListener('mouseout', function(){axeTarget.dataset[dataAttribute] = axeTarget.dataset[dataAttribute].replace(':','&');}, false);
+                /* axeBlade.removeAttribute('data-axeblade'); */
+            });
+
+
+            var bladeFragments = document.querySelectorAll('[data-bladesegment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment - 1)).slice(-2) + ']');
+
+            bladeFragments.forEach(function(bladeFragment){
+                bladeFragment.removeAttribute('data-bladesegment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment - 1)).slice(-2));
+            });
         }
 
         activateBlade(bladeSelector);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         /*
