@@ -380,6 +380,9 @@ function pseudoHover(axeRule) {
         var axeRuleQuery = '[data-' + dataAttribute + '="' + fragment + '"]' + axeRule.axeSelector[(axeRule.axeSelector.length - 1)];
     }
 
+
+    var axeBladeCatalyst = document.querySelector('[data-' + dataAttribute + ']');
+
     var axeTargets = document.querySelectorAll(axeRuleQuery);
     
     var activeFragment = axeRule.axeSelector[0];
@@ -416,11 +419,11 @@ function pseudoHover(axeRule) {
     axeTargets.forEach(function(axeTarget, i){
 
         axeRule.blades[axeRule.blades.length] = {};
-        axeTarget.setAttribute('data-axetarget', axeRule.axeIndex + '-' + i);
+        axeTarget.setAttribute('data-axetarget-' + axeRule.axeIndex + '-' + i, '');
         
         var newBlade = activeFragment;
         if (i > 0) {newBlade.shift();}
-        newBlade.unshift('[data-axetarget="' + axeRule.axeIndex + '-' + i + '"]');
+        newBlade.unshift('[data-axetarget-' + axeRule.axeIndex + '-' + i + ']');
         forgeSelector(newBlade);
         axeRule.blades[(axeRule.blades.length - 1)]['bladeSelector'] = forgedSelector.split(';');
         var bladeSelector = axeRule.blades[(axeRule.blades.length - 1)].bladeSelector;
@@ -466,10 +469,17 @@ function pseudoHover(axeRule) {
             var axeBlades = document.querySelectorAll(bladeSelectorFragment);
 
             axeBlades.forEach(function(axeBlade){
-                axeBlade.setAttribute('data-axeblade',axeRule.axeIndex + '-' + i);
-                axeBlade.addEventListener('mouseover', function(){axeTarget.dataset[dataAttribute] = axeTarget.dataset[dataAttribute].replace('&',':');}, false);
-                axeBlade.addEventListener('mouseout', function(){axeTarget.dataset[dataAttribute] = axeTarget.dataset[dataAttribute].replace(':','&');}, false);
-                /* axeBlade.removeAttribute('data-axeblade'); */
+                axeBlade.setAttribute('data-axeblade-' + axeRule.axeIndex + '-' + i, '');
+
+                axeBlade.addEventListener('mouseover', function(){
+                    axeBladeCatalyst.dataset[dataAttribute] = axeBladeCatalyst.dataset[dataAttribute].replace('&',':');}, false);
+
+                axeBlade.addEventListener('mouseout', function(){
+                    axeBladeCatalyst.dataset[dataAttribute] = axeBladeCatalyst.dataset[dataAttribute].replace(':','&');}, false);
+
+                axeBlade.removeAttribute('data-axeblade-' + axeRule.axeIndex + '-' + i);
+                axeTarget.removeAttribute('data-axetarget-' + axeRule.axeIndex + '-' + i);
+
             });
 
 
@@ -481,20 +491,7 @@ function pseudoHover(axeRule) {
         }
 
         activateBlade(bladeSelector);
-
-
-        /*
-        axeBlades.forEach(function(axeBlade){
-            axeBlade.setAttribute('data-axeblade', ((axeRule.axeIndex * 100) + i));
-            var currentTarget = document.querySelector('[data-axetarget="' + ((axeRule.axeIndex * 100) +  i) + '"]');
-            axeBlade.addEventListener('mouseover', function(){currentTarget.dataset[dataAttribute] = currentTarget.dataset[dataAttribute].replace('&',':');}, false);
-            axeBlade.addEventListener('mouseout', function(){currentTarget.dataset[dataAttribute] = currentTarget.dataset[dataAttribute].replace(':','&');}, false);
-            axeBlade.removeAttribute('data-axeblade');
-        });
-
-        */
-
-        /* axeTarget.removeAttribute('data-axetarget'); */
+        
     });
 }
 
