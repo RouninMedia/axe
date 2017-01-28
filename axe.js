@@ -383,14 +383,15 @@ function activateQuery(querySelector,segmentName) {
             var queryNeedle = querySelector[queryNewSegment].substring(3).replace(/\:[^\s]+/g, '');
 
             var queryTargetElements = activateSymbol(querySymbol, queryNode);
+
             queryTargetElements.forEach(function(queryTargetElement){
                 if (queryTargetElement[nodeProperties(queryNeedle).label] === nodeProperties(queryNeedle).name) {
-                        queryTargetElement.setAttribute('data-' + segmentName + '-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (querySegment + 1)).slice(-2),'');
+                        queryTargetElement.setAttribute('data-' + segmentName + '-segment-' + (querySegment + 1),'');
                 }
             });
         }
 
-        querySelectorFragment = '[data-' + segmentName + '-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (querySegment + 1)).slice(-2) + ']';
+        querySelectorFragment = '[data-' + segmentName + '-segment-' + (querySegment + 1) + ']';
         querySelectorFragment += (querySelector[(queryNewSegment + 1)] ? querySelector[(queryNewSegment + 1)] : '');
         querySegment = queryNewSegment;
 
@@ -402,8 +403,26 @@ function activateQuery(querySelector,segmentName) {
 
 
 
+/* =========== */
+/* VERSION TWO */
+/* =========== */
+
 function pseudoHover(axeRule) {
 
+    if (axeRule.axeSelector.length % 2 > 0) {
+        var dataAttribute = 'axe-' + ((axeRule.axeIndex * 100) + (axeRule.axeSelector.length - 2));
+    }
+
+    else {
+        var fragment = axeRule.axeSelector[1].replace(/\:/g,'&');
+
+        for (var s = 2; s < (axeRule.axeSelector.length - 1); s++) {
+            fragment += axeRule.axeSelector[s].replace(/\:/g,'&');
+        }
+
+        var dataAttribute = 'axe-' + ((axeRule.axeIndex * 100) + (axeRule.axeSelector.length - 2) - 1);
+    }
+    
     axeRule.bladeSelector = [];
     axeRule.targetSelector = [];
     var bladeSelector = axeRule.bladeSelector;
@@ -427,24 +446,46 @@ function pseudoHover(axeRule) {
     }
 
     bladeSelector.unshift(bladeSelector.join(''));
-    var bladeSelectorFragment = activateQuery(bladeSelector,'blade-segment');
+    var bladeSelectorFragment = activateQuery(bladeSelector,'axe-' + axeRule.axeIndex + '-blade');
     var axeBlades = document.querySelectorAll(bladeSelectorFragment);
 
-    axeBlades.forEach(function(axeBlade, bladeNumber){
-        axeBlade.setAttribute('data-axe-' + axeRule.axeIndex + '-blade-' + bladeNumber, bladeSelector[0]);
+    axeBlades.forEach(function(axeBlade, bladeIndex){
 
-        if (bladeNumber > 0) {
+        var bladeIndex = bladeIndex;
+
+        axeBlade.setAttribute('data-axe-' + axeRule.axeIndex + '-blade-' + bladeIndex, bladeSelector[0]);
+
+        if (bladeIndex > 0) {
             targetSelector.shift();
             targetSelector.shift();
         }
 
-        targetSelector.unshift('[data-axe-' + axeRule.axeIndex + '-blade-' + bladeNumber + ']');
+        targetSelector.unshift('[data-axe-' + axeRule.axeIndex + '-blade-' + bladeIndex + ']');
         targetSelector.unshift(targetSelector.join(''));
 
-        var targetSelectorFragment = activateQuery(targetSelector, 'target-segment');
+        var targetSelectorFragment = activateQuery(targetSelector, 'axe-' + axeRule.axeIndex + '-target');
         var axeTargets = document.querySelectorAll(targetSelectorFragment);
-    });
 
+        axeTargets.forEach(function(axeTarget){
+            axeTarget.setAttribute('data-axe-' + axeRule.axeIndex + '-target-' + bladeIndex, targetSelector[0]);
+        });
+
+        axeBlade.addEventListener('mouseover', function(){
+            var bladeTargets = document.querySelectorAll('[data-axe-' + axeRule.axeIndex + '-target-' + bladeIndex + ']');
+            bladeTargets.forEach(function(bladeTarget){
+                bladeTarget.dataset[dataAttribute] = bladeTarget.dataset[dataAttribute].replace('&',':');
+            });
+        }, false);
+
+        axeBlade.addEventListener('mouseout', function(){
+            var bladeTargets = document.querySelectorAll('[data-axe-' + axeRule.axeIndex + '-target-' + bladeIndex + ']');
+            bladeTargets.forEach(function(bladeTarget){
+                bladeTarget.dataset[dataAttribute] = bladeTarget.dataset[dataAttribute].replace(':','&');
+            });
+        }, false);  
+
+    });
+}
 
 for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
 console.log(document.styleSheets[0].cssRules[i]);
