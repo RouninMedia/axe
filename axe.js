@@ -402,11 +402,6 @@ function activateQuery(querySelector,segmentName) {
 }
 
 
-
-/* =========== */
-/* VERSION TWO */
-/* =========== */
-
 function pseudoHover(axeRule) {
 
     if (axeRule.axeSelector.length % 2 > 0) {
