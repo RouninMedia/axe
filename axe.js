@@ -43,13 +43,11 @@ function forgeSelector(query) {
             forgedSelector += ' ' + query[a];
         }
 
+/*
         if ((symbols.indexOf(query[(a - 1)]) < 0) && (query[a].indexOf(':hover') > -1) && (symbols.indexOf(query[(a + 1)]) < 0)) {
-            forgedSelector += ';';
-
-            if (symbols.indexOf(query[(a + 1)]) < 0) {
-                forgedSelector += ';';
-            }
+            forgedSelector += ';;';
         }
+        */
     }
 
     return forgedSelector;
@@ -394,10 +392,19 @@ function activateQuery(querySelector,segmentName) {
         querySelectorFragment = '[data-' + segmentName + '-segment-' + (querySegment + 1) + ']';
         querySelectorFragment += (querySelector[(queryNewSegment + 1)] ? querySelector[(queryNewSegment + 1)] : '');
         querySegment = queryNewSegment;
+    }
 
-        if (querySelector.length <= (querySegment + 2)) {
-            return querySelectorFragment;  
+    if (querySelector.length <= (querySegment + 2)) {
+
+        /*
+        if (something something) {
+            querySelectorFragment = querySelectorFragment.replace(/([^\]]+\]).[*]/, '$1');
         }
+
+        SWAP [*] for *
+
+        */
+        return querySelectorFragment;  
     }
 }
 
@@ -429,13 +436,12 @@ function pseudoHover(axeRule) {
             bladeSelector.push(axeRule.axeSelector[b]);
 
             if (axeRule.axeSelector[b].match(/\:/)) {
-                bladeSelector[(bladeSelector.length - 1)] = bladeSelector[(bladeSelector.length - 1)].replace(/([^\:]+):hover.*/, '$1');
+                bladeSelector[(bladeSelector.length - 1)] = bladeSelector[(bladeSelector.length - 1)].replace(/([^\:]+):hover(.*)/, '$1$2');
                 bladeCompleted = true;
             }
         }
 
         else if (bladeCompleted === true) {
-            if (b === (bladeSelector.length + 1)) continue;
             targetSelector.push(axeRule.axeSelector[b]);
         }
     }
@@ -452,18 +458,45 @@ function pseudoHover(axeRule) {
 
         if (bladeIndex > 0) {
             targetSelector.shift();
-            targetSelector.shift();
+            targetSelector[0] = targetSelector[0].replace(/([^\]]+\])(.*)/, '$2');
+
+            if (targetSelector[0].match(/^\s*$/)) {
+                targetSelector.shift();
+            }
+        }
+        
+        if (targetSelector.length > 0) {
+            if (targetSelector[0].match(/\?|\!|\^|\||\<|\%/)) {
+                targetSelector.unshift('[data-axe-' + axeRule.axeIndex + '-blade-' + bladeIndex + ']');
+            }
+
+            else {
+                targetSelector[0] = '[data-axe-' + axeRule.axeIndex + '-blade-' + bladeIndex + ']' + targetSelector[0];
+            }
         }
 
-        targetSelector.unshift('[data-axe-' + axeRule.axeIndex + '-blade-' + bladeIndex + ']');
+        else {
+            targetSelector[0] = '[data-axe-' + axeRule.axeIndex + '-blade-' + bladeIndex + ']';
+        }
+
         targetSelector.unshift(targetSelector.join(''));
 
         var targetSelectorFragment = activateQuery(targetSelector, 'axe-' + axeRule.axeIndex + '-target');
+
         var axeTargets = document.querySelectorAll(targetSelectorFragment);
 
         axeTargets.forEach(function(axeTarget){
             axeTarget.setAttribute('data-axe-' + axeRule.axeIndex + '-target-' + bladeIndex, targetSelector[0]);
         });
+
+        
+        for (var t = 0; t < targetSelector.length; t++) {
+            var axeTargetSegments = document.querySelectorAll('[data-axe-' + axeRule.axeIndex + '-target-segment-' + t + ']');
+            for (var s = 0; s < axeTargetSegments.length; s++) {
+                axeTargetSegments[s].removeAttribute('data-axe-' + axeRule.axeIndex + '-target-segment-' + t + '');
+            }
+        }
+        
 
         axeBlade.addEventListener('mouseover', function(){
             var bladeTargets = document.querySelectorAll('[data-axe-' + axeRule.axeIndex + '-target-' + bladeIndex + ']');
@@ -480,6 +513,13 @@ function pseudoHover(axeRule) {
         }, false);  
 
     });
+
+    for (var b = 0; b < bladeSelector.length; b++) {
+        var axeBladeSegments = document.querySelectorAll('[data-axe-' + axeRule.axeIndex + '-blade-segment-' + b + ']');
+        for (var s = 0; s < axeBladeSegments.length; s++) {
+            axeBladeSegments[s].removeAttribute('data-axe-' + axeRule.axeIndex + '-blade-segment-' + b + '');
+        }
+    }
 }
 
 for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
