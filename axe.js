@@ -1,8 +1,6 @@
 // CONVERT STYLESHEET INTO ARRAY
 
-var forgedSelector = '';
 var stylesheets = document.getElementsByTagName('style');
-
 
 function separateQuery(query) {
     query = query.replace(/(\w)\s+([\w\.\#])/g,'$1; ;$2');
@@ -12,9 +10,90 @@ function separateQuery(query) {
 }
 
 
+function reverseSymbol(query) {
+    for (var q = 0; q < query.length; q++) {
+        query[q] = query[q].replace(/\>/,'<');
+        query[q] = query[q].replace(/\s/,'^');
+        query[q] = query[q].replace(/\+/,'?');
+    }
+}
+
+function convertQuery(query) {
+
+    for (var b = 0; b < query.length; b++) {
+        if (query[b].match(/\:/)) {
+           var axis = b;
+        }
+    }
+ 
+    var bladeArray = new Array(query[axis]);
+    var a = (axis - 1);
+    var c = (axis + 1);
+
+    while ((a > -1) && (symbols.indexOf(query[a]) < 0)) {
+        bladeArray.unshift(query[a]);
+        a--;
+    }
+
+    while ((c < query.length) && (symbols.indexOf(query[c]) < 0)) {
+        bladeArray.push(query[c]);
+        c++;
+    }
+
+    bladeArray.shift();
+
+    console.log('query :');
+    console.log(query);
+
+    console.log('bladeArray :');
+    console.log(bladeArray);
+
+    for (var b = 0; b < bladeArray.length; b++) {
+        if (bladeArray[b].match(/\:/)) {
+           var bladeStart = b;
+        }
+    }
+
+    var bladeCoverArray = bladeArray.slice();
+    var bladeEdgeArray = bladeArray.slice(bladeStart);
+    var newBladeArray = bladeEdgeArray.slice();
+
+    bladeCoverArray[bladeStart] = bladeCoverArray[bladeStart].replace(':hover','');
+
+    newBladeArray.pop();
+    newBladeArray.reverse();
+    reverseSymbol(newBladeArray);
+
+    for (var bladeCover = (bladeCoverArray.length - 1); bladeCover > -1; bladeCover--) {
+        newBladeArray.unshift(bladeCoverArray[bladeCover]);
+    }
+
+
+    for (var bladeEdge = 1; bladeEdge < bladeEdgeArray.length; bladeEdge++) {
+        newBladeArray.push(bladeEdgeArray[bladeEdge]);
+    }
+
+    console.log('newBladeArray:');
+    console.log(newBladeArray);
+
+    var startOfQuery = query.slice(0, (axis - bladeStart));
+    var endOfQuery = query.slice((startOfQuery.length + bladeArray.length));
+    var query = startOfQuery.concat(newBladeArray).concat(endOfQuery);
+
+    console.log('query:');
+    console.log(query);
+
+    return query;
+}
+
+
 function forgeSelector(query) {
 
-    forgedSelector = '';
+    var query = convertQuery(query);
+
+    console.log(query);
+
+    var forgedSelector = '';
 
     for (var a = 0; a < query.length; a++) {
 
@@ -43,10 +122,15 @@ function forgeSelector(query) {
             forgedSelector += ' ' + query[a];
         }
 
-/*
+        /*
+
         if ((symbols.indexOf(query[(a - 1)]) < 0) && (query[a].indexOf(':hover') > -1) && (symbols.indexOf(query[(a + 1)]) < 0)) {
-            forgedSelector += ';;';
+            console.log('forgedSelector : ' + forgedSelector);
+            forgedSelector = forgedSelector.replace(/([^\:]+)\:.[*]/,'$1');
+            console.log('forgedSelector : ' + forgedSelector);
+            forgedSelector += ' ' + query[(a + 1)] + ' ' + query[(a + 2)] + '; ? li:hover;';
         }
+
         */
     }
 
@@ -133,7 +217,7 @@ for (var i = 0; i < stylesheets.length; i++) {
             var axeRule = axe.axeRules[axeRuleIndex];
             axeRule['axeIndex'] = stylesheetRules[j];
             var bronze = separateQuery(stylesheetRules[(j+1)]);
-            forgeSelector(bronze);
+            var forgedSelector = forgeSelector(bronze);
             axeRule['axeSelector'] = forgedSelector.split(';');
             axeRule.axeSelector.unshift(stylesheetRules[(j+1)]);
 
@@ -397,17 +481,28 @@ function activateQuery(querySelector,segmentName) {
     if (querySelector.length <= (querySegment + 2)) {
 
         /*
-        if (something something) {
-            querySelectorFragment = querySelectorFragment.replace(/([^\]]+\]).[*]/, '$1');
+        if ((segmentName.substr(-6,6) === '-blade') && (querySelector.length % 2 === 0) && (querySelector[(querySelector.length - 1)] + ':hover' !== axeRule.axeSelector[(querySelector.length - 1)])) {
+            querySelectorFragment = querySelectorFragment.replace(querySelector[(querySelector.length - 1)], axeRule.axeSelector[(querySelector.length - 1)]);
+            querySelectorFragment = querySelectorFragment.replace(/([^\:]+)\:.[*]/, '$1');
+            window.alert(querySelectorFragment);
         }
 
-        SWAP [*] for *
-
+        Remove [*]
         */
+
+        if ((segmentName.substr(-7,7) === '-target') && (querySelector.length % 2 === 0)) {
+            querySelectorFragment = querySelectorFragment.replace(/([^\]]+\]).*/, '$1');
+        }
+
         return querySelectorFragment;  
     }
 }
 
+
+
+/* =========== */
+/* VERSION TWO */
+/* =========== */
 
 function pseudoHover(axeRule) {
 
@@ -520,7 +615,209 @@ function pseudoHover(axeRule) {
             axeBladeSegments[s].removeAttribute('data-axe-' + axeRule.axeIndex + '-blade-segment-' + b + '');
         }
     }
+
+
+    /*
+    axeBlade.addEventListener('mouseover', function(){
+        axeHandles.forEach(function(axeHandle){
+            axeHandle.dataset[dataAttribute] = axeHandle.dataset[dataAttribute].replace('&',':');
+        });
+    }, false);
+
+    axeBlade.addEventListener('mouseout', function(){
+        axeHandles.forEach(function(axeHandle){
+            axeHandle.dataset[dataAttribute] = axeHandle.dataset[dataAttribute].replace(':','&');
+        });
+    }, false);
+    */
+
+
+
+
+
+    /*
+        var bladeFragments = document.querySelectorAll('[data-blade-segment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment - 1)).slice(-2) + ']');
+
+        bladeFragments.forEach(function(bladeFragment){
+            bladeFragment.removeAttribute('data-blade-segment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment - 1)).slice(-2));
+        });
+    }
+
+    */
 }
+
+
+/* =========== */
+/* VERSION ONE */
+/* =========== */
+
+/*
+function pseudoHover(axeRule) {
+
+    if (axeRule.axeSelector.length % 2 > 0) {
+        var dataAttribute = 'axe-' + ((axeRule.axeIndex * 100) + (axeRule.axeSelector.length - 2));
+        var axeTargetQuery = '[data-' + dataAttribute + '="' + axeRule.axeSelector[0].replace(/\:/g,'&') + '"]';
+        var axeHandleQuery = axeTargetQuery;
+    }
+
+    else {
+        var fragment = axeRule.axeSelector[1].replace(/\:/g,'&');
+
+        for (var s = 2; s < (axeRule.axeSelector.length - 1); s++) {
+            fragment += axeRule.axeSelector[s].replace(/\:/g,'&');
+        }
+
+        var dataAttribute = 'axe-' + ((axeRule.axeIndex * 100) + (axeRule.axeSelector.length - 2) - 1);
+        var axeTargetQuery = '[data-' + dataAttribute + '="' + fragment + '"]' + axeRule.axeSelector[(axeRule.axeSelector.length - 1)];
+        var axeHandleQuery = '[data-' + dataAttribute + '="' + fragment + '"]';
+    }
+
+    var axeTargets = document.querySelectorAll(axeTargetQuery);
+    var axeHandleQueryElements = document.querySelectorAll(axeHandleQuery);
+
+    var activeFragment = axeRule.axeSelector[0];
+    activeFragment = activeFragment.replace(/\&/g,'@&');
+    activeFragment = activeFragment.replace(/\</g,'@<');
+    activeFragment = activeFragment.replace(/\^/g,'@*');
+    activeFragment = activeFragment.replace(/\?/g,'@?');
+    activeFragment = activeFragment.replace(/\!/g,'@!');
+    activeFragment = activeFragment.replace(/\%/g,'@%');
+    activeFragment = activeFragment.replace(/\|/g,'@|');
+
+    activeFragment = activeFragment.replace(/\+/g,'?');
+    activeFragment = activeFragment.replace(/\>/g,'<');
+    activeFragment = activeFragment.replace(/\~/g,'!');
+
+    activeFragment = activeFragment.replace(/\@\&/g,':');
+    activeFragment = activeFragment.replace(/\@\</g,'>'); */
+
+    /*
+    activeFragment = activeFragment.replace(/\@\*/
+    /*g,'*');
+    activeFragment = activeFragment.replace(/\@\?/g,'+');
+    activeFragment = activeFragment.replace(/\@\!/g,'~');
+    activeFragment = activeFragment.replace(/\@\%/g,'@');
+    activeFragment = activeFragment.replace(/\@\|/g,'@');
+    activeFragment = activeFragment.split(' ');
+
+    activeFragment = activeFragment.reverse();
+    activeFragment.shift();
+    activeFragment = ' ' + activeFragment.join(' ');
+    */
+
+    /*
+    activeFragment = activeFragment.replace(/\:hover.*/
+    /*,'');
+    activeFragment = separateQuery('activeFragment' + activeFragment);
+    activeFragment.shift();
+    activeFragment = activeFragment.map(function(value){
+                         if (value === ' ') {return '^';}
+                         else if (value === '*') {return ' ';}
+                         else {return value;}
+                     });
+
+
+    axeTargets.forEach(function(axeTarget, i){
+
+        axeRule.blades[axeRule.blades.length] = {};
+        axeTarget.setAttribute('data-axetarget-' + axeRule.axeIndex + '-' + i, '');
+
+        if (axeHandleQueryElements.length > i) {
+            axeHandleQueryElements[i].setAttribute('data-axehandle-' + axeRule.axeIndex + '-' + i, '');
+        }
+
+        else {
+            axeHandleQueryElements[(axeHandleQueryElements.length - 1)].setAttribute('data-axehandle-' + axeRule.axeIndex + '-' + i, '');
+        }
+
+        var axeHandles = document.querySelectorAll('[data-axehandle-' + axeRule.axeIndex + '-' + i + ']');
+        
+        var newBlade = activeFragment;
+        if (i > 0) {newBlade.shift();}
+        newBlade.unshift('[data-axetarget-' + axeRule.axeIndex + '-' + i + ']');
+        forgeSelector(newBlade);
+        axeRule.blades[(axeRule.blades.length - 1)]['bladeSelector'] = forgedSelector.split(';');
+        var bladeSelector = axeRule.blades[(axeRule.blades.length - 1)].bladeSelector;
+        bladeSelector.unshift(newBlade.join(' '));
+
+
+        function activateBlade(bladeSelector) {
+
+            var bladeSegment = 0;
+            var bladeSelectorFragment = bladeSelector[1];
+
+            while (bladeSelector.length > (bladeSegment + 2)) {
+
+                var bladeNewSegment = (bladeSegment + 2);
+                var bladeSymbol = bladeSelector[bladeNewSegment].substring(1,2);
+                var bladePattern = bladeSelectorFragment.replace(/([^\]]+\])([^\:]+)(\:[^\s]+)(.*)/,'$1$2$4');
+
+                var bladeNodes = document.querySelectorAll(bladePattern);
+
+                var bladeCurrentAttribute = '';
+                for (var a = 1; a < bladeNewSegment; a++) {bladeCurrentAttribute += bladeSelector[a];}
+                var bladeNextAttribute = '';
+                for (var a = 1; a < (bladeNewSegment + 1); a++) {bladeNextAttribute += bladeSelector[a];}
+
+                for (var j = 0; j < bladeNodes.length; j++) {
+                    var bladeNode = bladeNodes[j];
+
+                    var bladeNeedle = bladeSelector[bladeNewSegment].substring(3).replace(/\:[^\s]+/g, '');
+
+                    var bladeTargetElements = activateSymbol(bladeSymbol, bladeNode);
+                    bladeTargetElements.forEach(function(bladeTargetElement){
+                        if (bladeTargetElement[nodeProperties(bladeNeedle).label] === nodeProperties(bladeNeedle).name) {
+                            bladeTargetElement.setAttribute('data-bladesegment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment + 1)).slice(-2),'');
+                        }
+                    });
+                }
+
+                bladeSelectorFragment = '[data-bladesegment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment + 1)).slice(-2) + ']';
+                bladeSelectorFragment += (bladeSelector[(bladeNewSegment + 1)] ? bladeSelector[(bladeNewSegment + 1)] : '');
+                bladeSegment = bladeNewSegment;
+            }
+
+            var axeBlades = document.querySelectorAll(bladeSelectorFragment);
+
+            axeBlades.forEach(function(axeBlade){
+
+                axeBlade.setAttribute('data-axeblade-' + axeRule.axeIndex + '-' + i, '');
+
+                axeBlade.addEventListener('mouseover', function(){
+                    axeHandles.forEach(function(axeHandle){
+                        axeHandle.dataset[dataAttribute] = axeHandle.dataset[dataAttribute].replace('&',':');
+                    });
+                }, false);
+
+                axeBlade.addEventListener('mouseout', function(){
+                    axeHandles.forEach(function(axeHandle){
+                        axeHandle.dataset[dataAttribute] = axeHandle.dataset[dataAttribute].replace(':','&');
+                    });
+                }, false);
+
+                axeBlade.removeAttribute('data-axeblade-' + axeRule.axeIndex + '-' + i);
+                axeTarget.removeAttribute('data-axetarget-' + axeRule.axeIndex + '-' + i);
+
+                axeHandles.forEach(function(axeHandle){
+                    console.log('data-axehandle-' + axeRule.axeIndex + '-' + i);
+                    axeHandle.removeAttribute('data-axehandle-' + axeRule.axeIndex + '-' + i);
+                });
+
+            });
+
+
+            var bladeFragments = document.querySelectorAll('[data-bladesegment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment - 1)).slice(-2) + ']');
+
+            bladeFragments.forEach(function(bladeFragment){
+                bladeFragment.removeAttribute('data-bladesegment-' + axeRule.axeIndex + '-' + i + '-' + ('0' + (bladeSegment - 1)).slice(-2));
+            });
+        }
+
+        activateBlade(bladeSelector);
+
+    });
+}
+*/
 
 for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
 console.log(document.styleSheets[0].cssRules[i]);
