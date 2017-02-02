@@ -556,21 +556,20 @@ function pseudoHover(axeRule) {
                 axeTargetSegments[s].removeAttribute('data-axe-' + axeRule.axeIndex + '-target-segment-' + t + '');
             }
         }
-        
 
+        var bladeTargets = document.querySelectorAll('[data-axe-' + axeRule.axeIndex + '-target-' + bladeIndex + ']');
+        
         axeBlade.addEventListener('mouseover', function(){
-            var bladeTargets = document.querySelectorAll('[data-axe-' + axeRule.axeIndex + '-target-' + bladeIndex + ']');
             bladeTargets.forEach(function(bladeTarget){
                 bladeTarget.dataset[dataAttribute] = bladeTarget.dataset[dataAttribute].replace('&',':');
             });
         }, false);
 
         axeBlade.addEventListener('mouseout', function(){
-            var bladeTargets = document.querySelectorAll('[data-axe-' + axeRule.axeIndex + '-target-' + bladeIndex + ']');
             bladeTargets.forEach(function(bladeTarget){
                 bladeTarget.dataset[dataAttribute] = bladeTarget.dataset[dataAttribute].replace(':','&');
             });
-        }, false);  
+        }, false);
 
     });
 
@@ -580,7 +579,22 @@ function pseudoHover(axeRule) {
             axeBladeSegments[s].removeAttribute('data-axe-' + axeRule.axeIndex + '-blade-segment-' + b + '');
         }
     }
+
+    for (var as = 0; as < axeRule.axeSelector.length; as++) {
+        var axeBlades = document.querySelectorAll('[data-axe-' + axeRule.axeIndex + '-blade-' + as + ']');
+        var axeTargets = document.querySelectorAll('[data-axe-' + axeRule.axeIndex + '-target-' + as + ']');
+
+        for (var ab = 0; ab < axeBlades.length; ab++) {
+            axeBlades[ab].removeAttribute('data-axe-' + axeRule.axeIndex + '-blade-' + as);
+        }
+        
+        for (var at = 0; at < axeTargets.length; at++) {
+            axeTargets[at].removeAttribute('data-axe-' + axeRule.axeIndex + '-target-' + as);
+        }
+    }
 }
+
+
 
 for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
 console.log(document.styleSheets[0].cssRules[i]);
