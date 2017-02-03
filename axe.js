@@ -158,20 +158,38 @@ for (var i = 0; i < stylesheets.length; i++) {
                     var ruleCount = (stylesheet[j].match(/\,/g).length + 1);
                     var ruleGroup = stylesheet[j].split(',');
 
+                    var k = (j + 1);
+                    var ruleSet = [];
+                    var ruleDeclaration = [];
+
+                    while ((stylesheet[k].match(/\:/)) && (!stylesheet[k].match(/\:hover/))) {
+                        ruleSet.push(stylesheet[k]);
+                        k++;
+                    }
+
                     for (var r = 0; r < ruleCount; r++) {
-                        if (ruleGroup[r].match(/\?/) === null) {
-                            var rulePosition = ((ruleIndex - 1) > document.styleSheets[0].cssRules.length ? document.styleSheets[0].cssRules.length : (ruleIndex - 1));
-                            document.styleSheets[0].insertRule(ruleGroup[r] + '{' + stylesheet[(j + 1)] + '}', rulePosition);
+                        ruleDeclaration.push(ruleGroup[r]);
+                        for (var s = 0; s < ruleSet.length; s++) {
+                            ruleDeclaration.push(ruleSet[s]);
                         }
                     }
 
-                    for (var r = 0; r < ruleCount; r++) {
-                        var splicePosition = ((r * 2) + 1);
-                        ruleGroup.splice(splicePosition, 0, stylesheet[(j+1)]);
-                    }
+                    stylesheet.splice(j, (ruleSet.length + 1), ...ruleDeclaration);
 
-                    stylesheet.splice(j, 2, ...ruleGroup);
+                    for (var r = 0; r < ruleCount; r++) {
+                        if (ruleGroup[r].match(/\?/) === null) {
+                            var rulePosition = ((ruleIndex - 1) > document.styleSheets[0].cssRules.length ? document.styleSheets[0].cssRules.length : (ruleIndex - 1));
+                            
+                            var ruleSeries = '';
+                            for (var rs = 0; rs < ruleSet.length; rs++) {
+                                ruleSeries += stylesheet[(j + rs + 1)] + ';';
+                            }
+
+                            document.styleSheets[0].insertRule(ruleGroup[r] + '{' + ruleSeries + '}', rulePosition);
+                        }
+                    }
                 }
+
             }
 
             stylesheetRules[stylesheetRules.length] = stylesheet[j].replace(/([\s]*:[\s]*)/,':').trim();
@@ -580,7 +598,8 @@ function pseudoHover(axeRule) {
         }
     }
 
-    for (var as = 0; as < axeRule.axeSelector.length; as++) {
+
+    for (var as = 0; as < (axeRule.axeSelector.length * 2); as++) {
         var axeBlades = document.querySelectorAll('[data-axe-' + axeRule.axeIndex + '-blade-' + as + ']');
         var axeTargets = document.querySelectorAll('[data-axe-' + axeRule.axeIndex + '-target-' + as + ']');
 
