@@ -1,6 +1,34 @@
-// CONVERT STYLESHEET INTO ARRAY
+var stylePaths = [];
+var linkedStyleSheets = document.querySelectorAll('[rel="stylesheet"]');
 
-var stylesheets = document.getElementsByTagName('style');
+linkedStyleSheets.forEach(function(linkedStyleSheet){
+   var path = linkedStyleSheet.getAttribute('href');
+   stylePaths[stylePaths.length] = path;
+});
+
+var headStyles = document.createElement('style');
+document.head.appendChild(headStyles);
+
+var symbols = ['<','^','%','|','?','!'];
+
+function getAxeStyles() {
+    for (var i = (stylePaths.length - 1); i > -1 ; i--) {
+        var axeStyleSheet = new XMLHttpRequest();
+        axeStyleSheet.onreadystatechange = function() {
+            if ((this.readyState === 4) && (this.status === 200)) {
+                headStyles.textContent = this.responseText + headStyles.textContent;
+            }
+        };
+  
+        axeStyleSheet.open('GET', stylePaths[i], true);
+        axeStyleSheet.send();
+    }
+
+    axeStyleSheet.addEventListener('load', function(){initialiseStylesheets();}, false);
+}
+
+getAxeStyles();
+
 
 function separateQuery(query) {
     query = query.replace(/(\w)\s+([\w\.\#])/g,'$1; ;$2');
@@ -118,121 +146,127 @@ function forgeSelector(query) {
 }
 
 
-for (var i = 0; i < stylesheets.length; i++) {
+function initialiseStylesheets() {
 
-    var stylesheetText = stylesheets[i].textContent;
-    stylesheetText = stylesheetText.replace(/\n/g,' ');
-    stylesheetText = stylesheetText.replace(/\/\*.*?\*\//g,'');
-    stylesheetText = stylesheetText.replace(/[\s]*{/g,'{');
-    stylesheetText = stylesheetText.replace(/\;?[\s]*}/g,'}');
-    stylesheetText = stylesheetText.replace(/{[\s]*/g,'{');
-    stylesheetText = stylesheetText.replace(/}[\s]*/g,'}');
+    // CONVERT STYLESHEET INTO ARRAY
 
-    var stylesheet = stylesheetText.split(/{|}|;/);
-    var stylesheetRules = [];
-    var ruleIndex = 0;
+    var stylesheets = document.getElementsByTagName('style');
 
-    for (var j = 0; j < stylesheet.length; j++) {
+    for (var i = 0; i < stylesheets.length; i++) {
 
-        if (!stylesheet[j].match(/(^$|^\s+$)/g)) {
+        var stylesheetText = stylesheets[i].textContent;
+        stylesheetText = stylesheetText.replace(/\n/g,' ');
+        stylesheetText = stylesheetText.replace(/\/\*.*?\*\//g,'');
+        stylesheetText = stylesheetText.replace(/[\s]*{/g,'{');
+        stylesheetText = stylesheetText.replace(/\;?[\s]*}/g,'}');
+        stylesheetText = stylesheetText.replace(/{[\s]*/g,'{');
+        stylesheetText = stylesheetText.replace(/}[\s]*/g,'}');
 
-            if (!stylesheet[j].match(/\:/g) ||
-                 stylesheet[j].match(/\:\:/g) ||
-                 stylesheet[j].match(/\:nth/g) ||
-                 stylesheet[j].match(/\:first/g) ||
-                 stylesheet[j].match(/\:last/g) ||
-                 stylesheet[j].match(/\:link/g) ||
-                 stylesheet[j].match(/\:visited/g) ||
-                 stylesheet[j].match(/\:hover/g) ||
-                 stylesheet[j].match(/\:active/g) ||
-                 stylesheet[j].match(/\:focus/g) ||
-                 stylesheet[j].match(/\:target/g)) {
+        var stylesheet = stylesheetText.split(/{|}|;/);
+        var stylesheetRules = [];
+        var ruleIndex = 0;
 
-                stylesheetRules[stylesheetRules.length] = ruleIndex;
+        for (var j = 0; j < stylesheet.length; j++) {
 
-                ruleIndex++;
+            if (!stylesheet[j].match(/(^$|^\s+$)/g)) {
 
-                // SEPARATE OUT COMMA-SEPARATED RULE-GROUPS
+                if (!stylesheet[j].match(/\:/g) ||
+                     stylesheet[j].match(/\:\:/g) ||
+                     stylesheet[j].match(/\:nth/g) ||
+                     stylesheet[j].match(/\:first/g) ||
+                     stylesheet[j].match(/\:last/g) ||
+                     stylesheet[j].match(/\:link/g) ||
+                     stylesheet[j].match(/\:visited/g) ||
+                     stylesheet[j].match(/\:hover/g) ||
+                     stylesheet[j].match(/\:active/g) ||
+                     stylesheet[j].match(/\:focus/g) ||
+                     stylesheet[j].match(/\:target/g)) {
 
-                if (stylesheet[j].match(/\,/g)) {
-                    var ruleCount = (stylesheet[j].match(/\,/g).length + 1);
-                    var ruleGroup = stylesheet[j].split(',');
+                    stylesheetRules[stylesheetRules.length] = ruleIndex;
 
-                    var k = (j + 1);
-                    var ruleSet = [];
-                    var ruleDeclaration = [];
+                    ruleIndex++;
 
-                    while ((stylesheet[k].match(/\:/)) && (!stylesheet[k].match(/\:hover/))) {
-                        ruleSet.push(stylesheet[k]);
-                        k++;
-                    }
+                    // SEPARATE OUT COMMA-SEPARATED RULE-GROUPS
+                
+                    if (stylesheet[j].match(/\,/g)) {
+                        var ruleCount = (stylesheet[j].match(/\,/g).length + 1);
+                        var ruleGroup = stylesheet[j].split(',');
 
-                    for (var r = 0; r < ruleCount; r++) {
-                        ruleDeclaration.push(ruleGroup[r]);
-                        for (var s = 0; s < ruleSet.length; s++) {
-                            ruleDeclaration.push(ruleSet[s]);
+                        var k = (j + 1);
+                        var ruleSet = [];
+                        var ruleDeclaration = [];
+
+                        while ((stylesheet[k].match(/\:/)) && (!stylesheet[k].match(/\:hover/))) {
+                            ruleSet.push(stylesheet[k]);
+                            k++;
                         }
-                    }
 
-                    stylesheet.splice(j, (ruleSet.length + 1), ...ruleDeclaration);
-
-                    for (var r = 0; r < ruleCount; r++) {
-                        if (ruleGroup[r].match(/\?/) === null) {
-                            var rulePosition = ((ruleIndex - 1) > document.styleSheets[0].cssRules.length ? document.styleSheets[0].cssRules.length : (ruleIndex - 1));
-                            
-                            var ruleSeries = '';
-                            for (var rs = 0; rs < ruleSet.length; rs++) {
-                                ruleSeries += stylesheet[(j + rs + 1)] + ';';
+                        for (var r = 0; r < ruleCount; r++) {
+                            ruleDeclaration.push(ruleGroup[r]);
+                            for (var s = 0; s < ruleSet.length; s++) {
+                                ruleDeclaration.push(ruleSet[s]);
                             }
+                        }
 
-                            document.styleSheets[0].insertRule(ruleGroup[r] + '{' + ruleSeries + '}', rulePosition);
+                        stylesheet.splice(j, (ruleSet.length + 1), ...ruleDeclaration);
+
+                        for (var r = 0; r < ruleCount; r++) {
+                            if (ruleGroup[r].match(/\?/) === null) {
+                                var rulePosition = ((ruleIndex - 1) > document.styleSheets[0].cssRules.length ? document.styleSheets[0].cssRules.length : (ruleIndex - 1));
+                            
+                                var ruleSeries = '';
+                                for (var rs = 0; rs < ruleSet.length; rs++) {
+                                    ruleSeries += stylesheet[(j + rs + 1)] + ';';
+                                }
+
+                                document.styleSheets[0].insertRule(ruleGroup[r] + '{' + ruleSeries + '}', rulePosition);
+                            }
                         }
                     }
                 }
 
+                stylesheetRules[stylesheetRules.length] = stylesheet[j].replace(/([\s]*:[\s]*)/,':').trim();
             }
+        }
 
-            stylesheetRules[stylesheetRules.length] = stylesheet[j].replace(/([\s]*:[\s]*)/,':').trim();
+        console.log(stylesheetRules);
+
+
+        // BUILD AXE RULES OBJECT
+
+        var axe = {};
+        axe['axeRules'] = [];
+        var axeRuleIndex = 0;
+
+        for (var j = 0; j < stylesheetRules.length; j++) {
+
+            if ((typeof stylesheetRules[j] === 'number') && (stylesheetRules[(j+1)].match(/(\<|\^|\?|\!|\%|\|)/))) {
+
+                axe.axeRules[axeRuleIndex] = {};
+                var axeRule = axe.axeRules[axeRuleIndex];
+                axeRule['axeIndex'] = stylesheetRules[j];
+                var bronze = separateQuery(stylesheetRules[(j+1)]);
+                var forgedSelector = forgeSelector(bronze);
+                axeRule['axeSelector'] = forgedSelector.split(';');
+                axeRule.axeSelector.unshift(stylesheetRules[(j+1)]);
+
+                var k = j + 2;
+                var axeStyles = {};
+
+                while (typeof stylesheetRules[k] === 'string') {
+                    var property = stylesheetRules[k].substring(0,stylesheetRules[k].indexOf(':'));
+                    var value = stylesheetRules[k].substring((stylesheetRules[k].indexOf(':') + 1));
+                    axeStyles[property] = value;
+                    k++;
+                }
+
+                axeRule['axeStyles'] = axeStyles;
+                axeRuleIndex++;
+            }
         }
     }
 
-
-    console.log(stylesheetRules);
-
-
-    // BUILD AXE RULES OBJECT
-
-    var axe = {};
-    axe['axeRules'] = [];
-    var axeRuleIndex = 0;
-    var symbols = ['<','^','%','|','?','!'];
-
-    for (var j = 0; j < stylesheetRules.length; j++) {
-
-        if ((typeof stylesheetRules[j] === 'number') && (stylesheetRules[(j+1)].match(/(\<|\^|\?|\!|\%|\|)/))) {
-
-            axe.axeRules[axeRuleIndex] = {};
-            var axeRule = axe.axeRules[axeRuleIndex];
-            axeRule['axeIndex'] = stylesheetRules[j];
-            var bronze = separateQuery(stylesheetRules[(j+1)]);
-            var forgedSelector = forgeSelector(bronze);
-            axeRule['axeSelector'] = forgedSelector.split(';');
-            axeRule.axeSelector.unshift(stylesheetRules[(j+1)]);
-
-            var k = j + 2;
-            var axeStyles = {};
-
-            while (typeof stylesheetRules[k] === 'string') {
-                var property = stylesheetRules[k].substring(0,stylesheetRules[k].indexOf(':'));
-                var value = stylesheetRules[k].substring((stylesheetRules[k].indexOf(':') + 1));
-                axeStyles[property] = value;
-                k++;
-            }
-
-            axeRule['axeStyles'] = axeStyles;
-            axeRuleIndex++;
-        }
-    }
+    axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
 }
 
 console.log(axe);
@@ -436,8 +470,6 @@ function axeStyle(axeRule) {
 }
 
 
-axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
-
 
 function activateQuery(querySelector,segmentName) {
 
@@ -612,7 +644,6 @@ function pseudoHover(axeRule) {
         }
     }
 }
-
 
 
 for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
