@@ -6,17 +6,19 @@ linkedStyleSheets.forEach(function(linkedStyleSheet){
    stylePaths[stylePaths.length] = path;
 });
 
-var headStyles = document.createElement('style');
-document.head.appendChild(headStyles);
+var axeStylesElement = document.createElement('axe-styles');
+document.head.appendChild(axeStylesElement);
 
 var symbols = ['<','^','%','|','?','!'];
+
+getAxeStyles();
 
 function getAxeStyles() {
     for (var i = (stylePaths.length - 1); i > -1 ; i--) {
         var axeStyleSheet = new XMLHttpRequest();
         axeStyleSheet.onreadystatechange = function() {
             if ((this.readyState === 4) && (this.status === 200)) {
-                headStyles.textContent = this.responseText + headStyles.textContent;
+                axeStylesElement.textContent = this.responseText + axeStylesElement.textContent;
             }
         };
   
@@ -26,8 +28,6 @@ function getAxeStyles() {
 
     axeStyleSheet.addEventListener('load', function(){initialiseStylesheets();}, false);
 }
-
-getAxeStyles();
 
 
 function separateQuery(query) {
@@ -108,7 +108,7 @@ function forgeSelector(query) {
 
     var queryString = query.join(' ');
 
-    if (queryString.match(/\:hover\s[\s|\+|\>|\~]+/)) {
+    if (queryString.match(/\:hover\s[\s\+\>\~]+/)) {
         query = convertQuery(query);
     }
 
@@ -150,7 +150,7 @@ function initialiseStylesheets() {
 
     // CONVERT STYLESHEET INTO ARRAY
 
-    var stylesheets = document.getElementsByTagName('style');
+    var stylesheets = document.getElementsByTagName('axe-styles');
 
     for (var i = 0; i < stylesheets.length; i++) {
 
@@ -211,7 +211,7 @@ function initialiseStylesheets() {
                         stylesheet.splice(j, (ruleSet.length + 1), ...ruleDeclaration);
 
                         for (var r = 0; r < ruleCount; r++) {
-                            if (ruleGroup[r].match(/\?/) === null) {
+                            if (ruleGroup[r].match(/[\<\^\?\!\%\|]/) === null) {
                                 var rulePosition = ((ruleIndex - 1) > document.styleSheets[0].cssRules.length ? document.styleSheets[0].cssRules.length : (ruleIndex - 1));
                             
                                 var ruleSeries = '';
@@ -228,9 +228,6 @@ function initialiseStylesheets() {
                 stylesheetRules[stylesheetRules.length] = stylesheet[j].replace(/([\s]*:[\s]*)/,':').trim();
             }
         }
-
-        console.log(stylesheetRules);
-
 
         // BUILD AXE RULES OBJECT
 
@@ -267,9 +264,19 @@ function initialiseStylesheets() {
     }
 
     axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
+
+
+    console.log(stylesheetRules);
+
+    console.log(axe);
+
+    for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
+        console.log(document.styleSheets[0].cssRules[i]);
+    }
+
+    document.head.removeChild(axeStylesElement);
 }
 
-console.log(axe);
 
 function nodeProperties(node) {
     var nodeProperties = {};
@@ -643,9 +650,4 @@ function pseudoHover(axeRule) {
             axeTargets[at].removeAttribute('data-axe-' + axeRule.axeIndex + '-target-' + as);
         }
     }
-}
-
-
-for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
-console.log(document.styleSheets[0].cssRules[i]);
 }
