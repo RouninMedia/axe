@@ -1,20 +1,18 @@
-var stylePaths = [];
-var linkedStyleSheets = document.querySelectorAll('[rel="stylesheet"]');
+var styleSheetPaths = [];
+var symbols = ['<','^','%','|','?','!'];
 
-linkedStyleSheets.forEach(function(linkedStyleSheet){
-   var path = linkedStyleSheet.getAttribute('href');
-   stylePaths[stylePaths.length] = path;
+document.querySelectorAll('[rel="stylesheet"]').forEach(function(styleSheetLink){
+   var styleSheetPath = styleSheetLink.getAttribute('href');
+   styleSheetPaths[styleSheetPaths.length] = styleSheetPath;
 });
 
 var axeStylesElement = document.createElement('axe-styles');
 document.head.appendChild(axeStylesElement);
 
-var symbols = ['<','^','%','|','?','!'];
-
 getAxeStyles();
 
 function getAxeStyles() {
-    for (var i = (stylePaths.length - 1); i > -1 ; i--) {
+    for (var i = (styleSheetPaths.length - 1); i > -1 ; i--) {
         var axeStyleSheet = new XMLHttpRequest();
         axeStyleSheet.onreadystatechange = function() {
             if ((this.readyState === 4) && (this.status === 200)) {
@@ -22,7 +20,7 @@ function getAxeStyles() {
             }
         };
   
-        axeStyleSheet.open('GET', stylePaths[i], true);
+        axeStyleSheet.open('GET', styleSheetPaths[i], true);
         axeStyleSheet.send();
     }
 
