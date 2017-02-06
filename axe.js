@@ -1,5 +1,5 @@
 var styleSheetPaths = [];
-document.querySelectorAll('[rel="stylesheet"]').forEach(function(styleSheetLink,i){
+document.querySelectorAll('[rel="stylesheet"]').forEach(function(styleSheetLink, i){
    styleSheetPaths[i] = styleSheetLink.getAttribute('href');
 });
 
@@ -164,19 +164,10 @@ function initialiseStylesheets() {
 
         for (var j = 0; j < stylesheet.length; j++) {
 
-            if (!stylesheet[j].match(/(^$|^\s+$)/g)) {
+            if (!stylesheet[j].match(/(^$|^\s+$)/)) {
 
-                if (!stylesheet[j].match(/\:/g) ||
-                     stylesheet[j].match(/\:\:/g) ||
-                     stylesheet[j].match(/\:nth/g) ||
-                     stylesheet[j].match(/\:first/g) ||
-                     stylesheet[j].match(/\:last/g) ||
-                     stylesheet[j].match(/\:link/g) ||
-                     stylesheet[j].match(/\:visited/g) ||
-                     stylesheet[j].match(/\:hover/g) ||
-                     stylesheet[j].match(/\:active/g) ||
-                     stylesheet[j].match(/\:focus/g) ||
-                     stylesheet[j].match(/\:target/g)) {
+                if (!stylesheet[j].match(/\:/) ||
+                     stylesheet[j].match(/\:\:|\:nth|\:first|\:last|\:link|\:visited|\:hover|\:active|\:focus|\:target/)) {
 
                     stylesheetRules[stylesheetRules.length] = ruleIndex;
 
