@@ -1,15 +1,13 @@
 var styleSheetPaths = [];
-var symbols = ['<','^','%','|','?','!'];
-
-document.querySelectorAll('[rel="stylesheet"]').forEach(function(styleSheetLink){
-   var styleSheetPath = styleSheetLink.getAttribute('href');
-   styleSheetPaths[styleSheetPaths.length] = styleSheetPath;
+document.querySelectorAll('[rel="stylesheet"]').forEach(function(styleSheetLink,i){
+   styleSheetPaths[i] = styleSheetLink.getAttribute('href');
 });
 
 var axeStylesElement = document.createElement('axe-styles');
 document.head.appendChild(axeStylesElement);
 
 getAxeStyles();
+var symbols = ['<','^','%','|','?','!'];
 
 function getAxeStyles() {
     for (var i = (styleSheetPaths.length - 1); i > -1 ; i--) {
