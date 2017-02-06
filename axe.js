@@ -464,16 +464,29 @@ function axeStyle(axeRule) {
 
     document.styleSheets[0].insertRule(selectorFragment + '{' + styleString(axeRule.axeStyles) + '}', axeRule.axeIndex);
 
-    if (axeRule.axeSelector[0].match(/\:click|\:hover/)) {
+    if (axeRule.axeSelector[0].match(/\:hover|\:click|\:rightclick|\:doubleclick|\:keypress|\:mousemove|\:resize|\:scroll|\:blur|\:focus|\:change|\:invalid|\:reset|\:search|\:select|\:submit/)) {
         var pseudoElement = axeRule.axeSelector[0].replace(/[^\:]+(\:[^\s]+).*/,'$1');
 
         switch (pseudoElement) {
-            case(':click') : pseudoClick(axeRule); break;
             case(':hover') : pseudoHover(axeRule); break;
+            case(':click') : pseudoClick(axeRule); break;
+            case(':rightclick') : pseudoRightClick(axeRule); break;
+            case(':doubleclick') : pseudoDoubleClick(axeRule); break;
+            case(':keypress') : pseudoKeyPress(axeRule); break;
+            case(':mousemove') : pseudoMouseMove(axeRule); break;
+            case(':resize') : pseudoResize(axeRule); break;
+            case(':scroll') : pseudoScroll(axeRule); break;
+            case(':blur') : pseudoBlur(axeRule); break;
+            case(':focus') : pseudoFocus(axeRule); break;
+            case(':change') : pseudoChange(axeRule); break;
+            case(':invalid') : pseudoIvalid(axeRule); break;
+            case(':reset') : pseudoReset(axeRule); break;
+            case(':search') : pseudoSearch(axeRule); break;
+            case(':select') : pseudoSelect(axeRule); break;
+            case(':submit') : pseudoSubmit(axeRule); break;
         }
     }
 }
-
 
 
 function activateQuery(querySelector,segmentName) {
