@@ -1,3 +1,17 @@
+/*
+axe INSPIRED BY...
+==================
+1) Learning jQuery and being massively impressed by its elegant and simple architecture 
+2) Questions on StackOverflow showing where plain CSS falls short
+3) Wanting to learn to use Javascript objects competently
+4) Lea Verou's MarkApp
+5) "You might not need Javascript"
+6) Element Queries
+*/
+
+// THERE NEEDS TO BE AN NTH-OF-CLASS AT SOME POINT
+
+
 var styleSheetPaths = [];
 document.querySelectorAll('[rel="stylesheet"]').forEach(function(styleSheetLink, i){
    styleSheetPaths[i] = styleSheetLink.getAttribute('href');
@@ -151,6 +165,7 @@ function initialiseStylesheets() {
     for (var i = 0; i < stylesheets.length; i++) {
 
         var stylesheetText = stylesheets[i].textContent;
+        stylesheetText = stylesheetText.replace(/\\/g,' ^ body ');
         stylesheetText = stylesheetText.replace(/\n/g,' ');
         stylesheetText = stylesheetText.replace(/\/\*.*?\*\//g,'');
         stylesheetText = stylesheetText.replace(/[\s]*{/g,'{');
