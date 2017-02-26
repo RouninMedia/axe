@@ -1,7 +1,7 @@
 /*
 axe INSPIRED BY...
 ==================
-1) Learning jQuery and being massively impressed by its elegant and simple architecture 
+1) Learning jQuery fundamentals in a few days and being massively impressed by the elegance and simplicity of its syntax 
 2) Questions on StackOverflow showing where plain CSS falls short
 3) Wanting to learn to use Javascript objects competently
 4) Lea Verou's MarkApp
