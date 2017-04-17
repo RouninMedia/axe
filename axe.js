@@ -9,8 +9,11 @@ axe INSPIRED BY...
 6) Element Queries
 */
 
-// THERE NEEDS TO BE AN NTH-OF-CLASS AT SOME POINT
+// THERE NEEDS TO BE AN :nth-of-set() AT SOME POINT which handles element classes as well as types 
+// nth-of-set can also take context. eg. img:nth-of-set(even, 'main aside')
+// will select every even img from this: <main> [...] <aside><p><img></p> <p></p> <p><img></p></aside> [...] </main> etc.
 
+console.time('axeSpeed');
 
 var styleSheetPaths = [];
 document.querySelectorAll('[rel="stylesheet"]').forEach(function(styleSheetLink, i){
@@ -20,12 +23,14 @@ document.querySelectorAll('[rel="stylesheet"]').forEach(function(styleSheetLink,
 var axeStylesElement = document.createElement('axe-styles');
 document.head.appendChild(axeStylesElement);
 
-getAxeStyles();
 var symbols = ['<','^','%','|','?','!'];
+getAxeStyles();
 
 function getAxeStyles() {
+    var axeStyleSheet;
+
     for (var i = (styleSheetPaths.length - 1); i > -1 ; i--) {
-        var axeStyleSheet = new XMLHttpRequest();
+        axeStyleSheet = new XMLHttpRequest();
         axeStyleSheet.onreadystatechange = function() {
             if ((this.readyState === 4) && (this.status === 200)) {
                 axeStylesElement.textContent = this.responseText + axeStylesElement.textContent;
@@ -36,7 +41,14 @@ function getAxeStyles() {
         axeStyleSheet.send();
     }
 
-    axeStyleSheet.addEventListener('load', function(){initialiseStylesheets();}, false);
+    if (typeof axeStyleSheet != 'undefined') {
+        axeStyleSheet.addEventListener('load', function(){initialiseStylesheets();}, false);
+    }
+
+    else {
+        axeStylesElement.textContent = document.head.getElementsByTagName('style')[0].textContent;
+        initialiseStylesheets();
+    }
 }
 
 
@@ -168,6 +180,7 @@ function initialiseStylesheets() {
         stylesheetText = stylesheetText.replace(/\\/g,' ^ body ');
         stylesheetText = stylesheetText.replace(/\n/g,' ');
         stylesheetText = stylesheetText.replace(/\/\*.*?\*\//g,'');
+        stylesheetText = stylesheetText.replace(/\@keyframes.*?\{.*?\}\s*\}/g,'');
         stylesheetText = stylesheetText.replace(/[\s]*{/g,'{');
         stylesheetText = stylesheetText.replace(/\;?[\s]*}/g,'}');
         stylesheetText = stylesheetText.replace(/{[\s]*/g,'{');
@@ -267,6 +280,7 @@ function initialiseStylesheets() {
 
     axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
 
+    console.timeEnd('axeSpeed');
 
     console.log(stylesheetRules);
 
@@ -466,6 +480,7 @@ function axeStyle(axeRule) {
         });
     }
 
+    // console.log(selectorFragment + '{' + styleString(axeRule.axeStyles) + '}');
     document.styleSheets[0].insertRule(selectorFragment + '{' + styleString(axeRule.axeStyles) + '}', axeRule.axeIndex);
 
     if (axeRule.axeSelector[0].match(/\:hover|\:click|\:rightclick|\:doubleclick|\:keypress|\:mousemove|\:resize|\:scroll|\:blur|\:focus|\:change|\:invalid|\:reset|\:search|\:select|\:submit/)) {
@@ -483,7 +498,7 @@ function axeStyle(axeRule) {
             case(':blur') : pseudoBlur(axeRule); break;
             case(':focus') : pseudoFocus(axeRule); break;
             case(':change') : pseudoChange(axeRule); break;
-            case(':invalid') : pseudoIvalid(axeRule); break;
+            case(':invalid') : pseudoInvalid(axeRule); break;
             case(':reset') : pseudoReset(axeRule); break;
             case(':search') : pseudoSearch(axeRule); break;
             case(':select') : pseudoSelect(axeRule); break;
