@@ -13,7 +13,7 @@ axe INSPIRED BY...
 // nth-of-set can also take context. eg. img:nth-of-set(even, 'main aside')
 // will select every even img from this: <main> [...] <aside><p><img></p> <p></p> <p><img></p></aside> [...] </main> etc.
 
-console.time('axeSpeed');
+// console.time('axeSpeed');
 
 var styleSheetPaths = [];
 document.querySelectorAll('[rel="stylesheet"]').forEach(function(styleSheetLink, i){
@@ -280,6 +280,7 @@ function initialiseStylesheets() {
 
     axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
 
+    /*
     console.timeEnd('axeSpeed');
 
     console.log(stylesheetRules);
@@ -289,6 +290,7 @@ function initialiseStylesheets() {
     for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
         console.log(document.styleSheets[0].cssRules[i]);
     }
+    */
 
     document.head.removeChild(axeStylesElement);
 }
