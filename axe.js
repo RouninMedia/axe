@@ -280,6 +280,7 @@ function initialiseStylesheets() {
 
     axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
 
+    /*
     
     console.timeEnd('axeSpeed');
 
@@ -290,6 +291,8 @@ function initialiseStylesheets() {
     for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
         console.log(document.styleSheets[0].cssRules[i]);
     }
+   
+   */
 
     document.head.removeChild(axeStylesElement);
 }
