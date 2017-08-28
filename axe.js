@@ -280,7 +280,6 @@ function initialiseStylesheets() {
 
     axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
 
-    /*
     
     console.timeEnd('axeSpeed');
 
@@ -291,8 +290,6 @@ function initialiseStylesheets() {
     for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
         console.log(document.styleSheets[0].cssRules[i]);
     }
-   
-   */
 
     document.head.removeChild(axeStylesElement);
 }
@@ -318,6 +315,10 @@ function nodeProperties(node) {
             nodeProperties['type'] = 0;
             nodeProperties['name'] = node.toUpperCase();
             nodeProperties['label'] = 'nodeName';
+    }
+
+    if (node.indexOf('.') > 0) {
+        nodeProperties['qualifierClass'] = node.substr(node.indexOf('.') + 1);   
     }
 
     return nodeProperties;
@@ -465,9 +466,19 @@ function axeStyle(axeRule) {
             var needle = axeRule.axeSelector[newSegment].substring(3).replace(/\:[^\s]+/g, '');
 
             var targetElements = activateSymbol(symbol, node);
-            targetElements.forEach(function(targetElement, t){
-                if (targetElement[nodeProperties(needle).label] === nodeProperties(needle).name) {
+            targetElements.forEach(function(targetElement, t) {
+
+                var completeLabel = targetElement[nodeProperties(needle).label];
+
+                if (nodeProperties(needle).hasOwnProperty('qualifierClass')) {
+                    if (targetElement.classList.contains(nodeProperties(needle).qualifierClass)) {
+                        completeLabel += '.' + nodeProperties(needle).qualifierClass.toUpperCase();
+                    }
+                }
+
+                if (completeLabel === nodeProperties(needle).name) {
                     targetElement.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2), nextAttribute.replace(':','&'));
+                    console.log('data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2));
                 }
             });
         }
