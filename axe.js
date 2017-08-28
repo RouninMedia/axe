@@ -280,16 +280,13 @@ function initialiseStylesheets() {
 
     axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
 
-    
-    console.timeEnd('axeSpeed');
+    // console.timeEnd('axeSpeed');
+    // console.log(stylesheetRules);
+    // console.log(axe);
 
-    console.log(stylesheetRules);
-
-    console.log(axe);
-
-    for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
-        console.log(document.styleSheets[0].cssRules[i]);
-    }
+    // for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
+    //    console.log(document.styleSheets[0].cssRules[i]);
+    //}
 
     document.head.removeChild(axeStylesElement);
 }
@@ -478,7 +475,7 @@ function axeStyle(axeRule) {
 
                 if (completeLabel === nodeProperties(needle).name) {
                     targetElement.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2), nextAttribute.replace(':','&'));
-                    console.log('data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2));
+                    // console.log('data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2));
                 }
             });
         }
