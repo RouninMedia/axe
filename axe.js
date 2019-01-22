@@ -20,10 +20,10 @@ document.querySelectorAll('[rel="stylesheet"]').forEach(function(styleSheetLink,
    styleSheetPaths[i] = styleSheetLink.getAttribute('href');
 });
 
-var axeStylesElement = document.createElement('axe-styles');
+const axeStylesElement = document.createElement('axe-styles');
 document.head.appendChild(axeStylesElement);
 
-var symbols = ['<','^','%','|','?','!'];
+const symbols = ['<','^','%','|','?','!'];
 getAxeStyles();
 
 function getAxeStyles() {
@@ -52,15 +52,14 @@ function getAxeStyles() {
 }
 
 
-function separateQuery(query) {
+const separateQuery = (query) => {
     query = query.replace(/(\w)\s+([\w\.\#])/g,'$1; ;$2');
     query = query.replace(/(\w)\s*?([\>\+\~\<\^\?\!\%\|\*])\s*?([\w\.\#])/g,'$1;$2;$3');
     query = query.split(';');
     return query;
 }
 
-
-function reverseSymbol(query) {
+const reverseSymbol = (query) => {
     for (var q = 0; q < query.length; q++) {
         query[q] = query[q].replace(/\>/,'<');
         query[q] = query[q].replace(/\s/,'^');
@@ -69,7 +68,7 @@ function reverseSymbol(query) {
     }
 }
 
-function convertQuery(query) {
+const convertQuery = (query) => {
 
     for (var b = 0; b < query.length; b++) {
         if (query[b].match(/\:/)) {
@@ -292,7 +291,7 @@ function initialiseStylesheets() {
 }
 
 
-function nodeProperties(node) {
+const nodeProperties = (node) => {
     var nodeProperties = {};
     
     switch (node.substring(0,1)) {
@@ -321,8 +320,7 @@ function nodeProperties(node) {
     return nodeProperties;
 }
 
-
-function styleString(styleObject) {
+const styleString = (styleObject) => {
     var styleString = '';
 
     Object.keys(styleObject).forEach(function(property){
@@ -333,7 +331,7 @@ function styleString(styleObject) {
 }
 
 
-function siblingImmediatePrevious(element) {
+const siblingImmediatePrevious = (element) => {
     var immediatePreviousSibling = [];
 
     for (var i = 0; i < element.parentNode.children.length; i++) {
@@ -346,7 +344,7 @@ function siblingImmediatePrevious(element) {
 }
 
 
-function siblingImmediate(element) {
+const siblingImmediate = (element) => {
     var immediateSiblings = [];
 
     for (var i = 0; i < element.parentNode.children.length; i++) {
@@ -364,14 +362,14 @@ function siblingImmediate(element) {
 }
 
 
-function ancestorImmediate(element) {
+const ancestorImmediate = (element) => {
     var immediateAncestor = [];
     immediateAncestor[0] = element.parentNode;
     return immediateAncestor;
 }
 
 
-function ancestorAll(element) {
+const ancestorAll = (element) => {
     var allAncestors = [];
     var ancestor = element.parentNode;
 
@@ -384,7 +382,7 @@ function ancestorAll(element) {
 }
 
 
-function siblingAllPrevious(element) {
+const siblingAllPrevious = (element) => {
     var s = 0;
     var allPreviousSiblings = [];
 
@@ -398,7 +396,7 @@ function siblingAllPrevious(element) {
 }
 
 
-function siblingAll(element) {
+const siblingAll = (element) => {
     var s = 0;
     var allSiblings = [];
 
@@ -412,7 +410,7 @@ function siblingAll(element) {
 }
 
 
-function activateSymbol(symbol, node) {
+const activateSymbol = (symbol, node) => {
     var targetElements = [];
 
     switch (symbol) {
@@ -428,7 +426,7 @@ function activateSymbol(symbol, node) {
 }
 
 
-function axeStyle(axeRule) {
+const axeStyle = (axeRule) => {
 
     var segment = 0;
     var selectorFragment = axeRule.axeSelector[1];
@@ -520,7 +518,7 @@ function axeStyle(axeRule) {
 }
 
 
-function activateQuery(querySelector,segmentName) {
+const activateQuery(querySelector,segmentName) => {
 
     var querySegment = 0;
     var querySelectorFragment = querySelector[1];
@@ -568,7 +566,7 @@ function activateQuery(querySelector,segmentName) {
 }
 
 
-function pseudoHover(axeRule) {
+const pseudoHover = (axeRule) => {
 
     if (axeRule.axeSelector.length % 2 > 0) {
         var dataAttribute = 'axe-' + ((axeRule.axeIndex * 100) + (axeRule.axeSelector.length - 2));
