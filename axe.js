@@ -16,6 +16,130 @@ axe INSPIRED BY...
 // console.time('axeSpeed');
 
 
+const initialiseStylesheets = () => {
+
+    // CONVERT STYLESHEET INTO ARRAY
+
+    var stylesheets = document.getElementsByTagName('axe-styles');
+
+    for (var i = 0; i < stylesheets.length; i++) {
+
+        var stylesheetText = stylesheets[i].textContent;
+        stylesheetText = stylesheetText.replace(/\\/g,' ^ body ');
+        stylesheetText = stylesheetText.replace(/\n/g,' ');
+        stylesheetText = stylesheetText.replace(/\/\*.*?\*\//g,'');
+        stylesheetText = stylesheetText.replace(/\@keyframes.*?\{.*?\}\s*\}/g,'');
+        stylesheetText = stylesheetText.replace(/[\s]*{/g,'{');
+        stylesheetText = stylesheetText.replace(/\;?[\s]*}/g,'}');
+        stylesheetText = stylesheetText.replace(/{[\s]*/g,'{');
+        stylesheetText = stylesheetText.replace(/}[\s]*/g,'}');
+
+        var stylesheet = stylesheetText.split(/{|}|;/);
+        var stylesheetRules = [];
+        var ruleIndex = 0;
+
+        for (var j = 0; j < stylesheet.length; j++) {
+
+            if (!stylesheet[j].match(/(^$|^\s+$)/)) {
+
+                if (!stylesheet[j].match(/\:/) ||
+                     stylesheet[j].match(/\:\:|\:nth|\:first|\:last|\:link|\:visited|\:hover|\:active|\:focus|\:target/)) {
+
+                    stylesheetRules[stylesheetRules.length] = ruleIndex;
+
+                    ruleIndex++;
+
+                    // SEPARATE OUT COMMA-SEPARATED RULE-GROUPS
+                
+                    if (stylesheet[j].match(/\,/g)) {
+                        var ruleCount = (stylesheet[j].match(/\,/g).length + 1);
+                        var ruleGroup = stylesheet[j].split(',');
+
+                        var k = (j + 1);
+                        var ruleSet = [];
+                        var ruleDeclaration = [];
+
+                        while ((stylesheet[k].match(/\:/)) && (!stylesheet[k].match(/\:hover/))) {
+                            ruleSet.push(stylesheet[k]);
+                            k++;
+                        }
+
+                        for (var r = 0; r < ruleCount; r++) {
+                            ruleDeclaration.push(ruleGroup[r]);
+                            for (var s = 0; s < ruleSet.length; s++) {
+                                ruleDeclaration.push(ruleSet[s]);
+                            }
+                        }
+
+                        stylesheet.splice(j, (ruleSet.length + 1), ...ruleDeclaration);
+
+                        for (var r = 0; r < ruleCount; r++) {
+                            if (ruleGroup[r].match(/[\<\^\?\!\%\|]/) === null) {
+                                var rulePosition = ((ruleIndex - 1) > document.styleSheets[0].cssRules.length ? document.styleSheets[0].cssRules.length : (ruleIndex - 1));
+                            
+                                var ruleSeries = '';
+                                for (var rs = 0; rs < ruleSet.length; rs++) {
+                                    ruleSeries += stylesheet[(j + rs + 1)] + ';';
+                                }
+
+                                document.styleSheets[0].insertRule(ruleGroup[r] + '{' + ruleSeries + '}', rulePosition);
+                            }
+                        }
+                    }
+                }
+
+                stylesheetRules[stylesheetRules.length] = stylesheet[j].replace(/([\s]*:[\s]*)/,':').trim();
+            }
+        }
+
+        // BUILD AXE RULES OBJECT
+
+        var axe = {};
+        axe['axeRules'] = [];
+        var axeRuleIndex = 0;
+
+        for (var j = 0; j < stylesheetRules.length; j++) {
+
+            if ((typeof stylesheetRules[j] === 'number') && (stylesheetRules[(j+1)].match(/(\<|\^|\?|\!|\%|\|)/))) {
+
+                axe.axeRules[axeRuleIndex] = {};
+                var axeRule = axe.axeRules[axeRuleIndex];
+                axeRule['axeIndex'] = stylesheetRules[j];
+                var bronze = separateQuery(stylesheetRules[(j+1)]);
+                var forgedSelector = forgeSelector(bronze);
+                axeRule['axeSelector'] = forgedSelector.split(';');
+                axeRule.axeSelector.unshift(stylesheetRules[(j+1)]);
+
+                var k = j + 2;
+                var axeStyles = {};
+
+                while (typeof stylesheetRules[k] === 'string') {
+                    var property = stylesheetRules[k].substring(0,stylesheetRules[k].indexOf(':'));
+                    var value = stylesheetRules[k].substring((stylesheetRules[k].indexOf(':') + 1));
+                    axeStyles[property] = value;
+                    k++;
+                }
+
+                axeRule['axeStyles'] = axeStyles;
+                axeRuleIndex++;
+            }
+        }
+    }
+
+    axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
+
+    // console.timeEnd('axeSpeed');
+    // console.log(stylesheetRules);
+    // console.log(axe);
+
+    // for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
+    //    console.log(document.styleSheets[0].cssRules[i]);
+    //}
+
+    document.head.removeChild(axeStylesElement);
+}
+
+
 const getAxeStyles = () => {
     var axeStyleSheet;
 
@@ -355,130 +479,6 @@ const forgeSelector = (query) => {
     }
 
     return forgedSelector;
-}
-
-
-const initialiseStylesheets = () => {
-
-    // CONVERT STYLESHEET INTO ARRAY
-
-    var stylesheets = document.getElementsByTagName('axe-styles');
-
-    for (var i = 0; i < stylesheets.length; i++) {
-
-        var stylesheetText = stylesheets[i].textContent;
-        stylesheetText = stylesheetText.replace(/\\/g,' ^ body ');
-        stylesheetText = stylesheetText.replace(/\n/g,' ');
-        stylesheetText = stylesheetText.replace(/\/\*.*?\*\//g,'');
-        stylesheetText = stylesheetText.replace(/\@keyframes.*?\{.*?\}\s*\}/g,'');
-        stylesheetText = stylesheetText.replace(/[\s]*{/g,'{');
-        stylesheetText = stylesheetText.replace(/\;?[\s]*}/g,'}');
-        stylesheetText = stylesheetText.replace(/{[\s]*/g,'{');
-        stylesheetText = stylesheetText.replace(/}[\s]*/g,'}');
-
-        var stylesheet = stylesheetText.split(/{|}|;/);
-        var stylesheetRules = [];
-        var ruleIndex = 0;
-
-        for (var j = 0; j < stylesheet.length; j++) {
-
-            if (!stylesheet[j].match(/(^$|^\s+$)/)) {
-
-                if (!stylesheet[j].match(/\:/) ||
-                     stylesheet[j].match(/\:\:|\:nth|\:first|\:last|\:link|\:visited|\:hover|\:active|\:focus|\:target/)) {
-
-                    stylesheetRules[stylesheetRules.length] = ruleIndex;
-
-                    ruleIndex++;
-
-                    // SEPARATE OUT COMMA-SEPARATED RULE-GROUPS
-                
-                    if (stylesheet[j].match(/\,/g)) {
-                        var ruleCount = (stylesheet[j].match(/\,/g).length + 1);
-                        var ruleGroup = stylesheet[j].split(',');
-
-                        var k = (j + 1);
-                        var ruleSet = [];
-                        var ruleDeclaration = [];
-
-                        while ((stylesheet[k].match(/\:/)) && (!stylesheet[k].match(/\:hover/))) {
-                            ruleSet.push(stylesheet[k]);
-                            k++;
-                        }
-
-                        for (var r = 0; r < ruleCount; r++) {
-                            ruleDeclaration.push(ruleGroup[r]);
-                            for (var s = 0; s < ruleSet.length; s++) {
-                                ruleDeclaration.push(ruleSet[s]);
-                            }
-                        }
-
-                        stylesheet.splice(j, (ruleSet.length + 1), ...ruleDeclaration);
-
-                        for (var r = 0; r < ruleCount; r++) {
-                            if (ruleGroup[r].match(/[\<\^\?\!\%\|]/) === null) {
-                                var rulePosition = ((ruleIndex - 1) > document.styleSheets[0].cssRules.length ? document.styleSheets[0].cssRules.length : (ruleIndex - 1));
-                            
-                                var ruleSeries = '';
-                                for (var rs = 0; rs < ruleSet.length; rs++) {
-                                    ruleSeries += stylesheet[(j + rs + 1)] + ';';
-                                }
-
-                                document.styleSheets[0].insertRule(ruleGroup[r] + '{' + ruleSeries + '}', rulePosition);
-                            }
-                        }
-                    }
-                }
-
-                stylesheetRules[stylesheetRules.length] = stylesheet[j].replace(/([\s]*:[\s]*)/,':').trim();
-            }
-        }
-
-        // BUILD AXE RULES OBJECT
-
-        var axe = {};
-        axe['axeRules'] = [];
-        var axeRuleIndex = 0;
-
-        for (var j = 0; j < stylesheetRules.length; j++) {
-
-            if ((typeof stylesheetRules[j] === 'number') && (stylesheetRules[(j+1)].match(/(\<|\^|\?|\!|\%|\|)/))) {
-
-                axe.axeRules[axeRuleIndex] = {};
-                var axeRule = axe.axeRules[axeRuleIndex];
-                axeRule['axeIndex'] = stylesheetRules[j];
-                var bronze = separateQuery(stylesheetRules[(j+1)]);
-                var forgedSelector = forgeSelector(bronze);
-                axeRule['axeSelector'] = forgedSelector.split(';');
-                axeRule.axeSelector.unshift(stylesheetRules[(j+1)]);
-
-                var k = j + 2;
-                var axeStyles = {};
-
-                while (typeof stylesheetRules[k] === 'string') {
-                    var property = stylesheetRules[k].substring(0,stylesheetRules[k].indexOf(':'));
-                    var value = stylesheetRules[k].substring((stylesheetRules[k].indexOf(':') + 1));
-                    axeStyles[property] = value;
-                    k++;
-                }
-
-                axeRule['axeStyles'] = axeStyles;
-                axeRuleIndex++;
-            }
-        }
-    }
-
-    axe.axeRules.forEach(function(axeRule){axeStyle(axeRule);});
-
-    // console.timeEnd('axeSpeed');
-    // console.log(stylesheetRules);
-    // console.log(axe);
-
-    // for (var i = 0; i < document.styleSheets[0].cssRules.length; i++) {
-    //    console.log(document.styleSheets[0].cssRules[i]);
-    //}
-
-    document.head.removeChild(axeStylesElement);
 }
 
 
