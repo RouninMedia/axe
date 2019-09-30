@@ -16,6 +16,23 @@ axe INSPIRED BY...
 // console.time('axeSpeed');
 
 
+
+const activateSymbol = (symbol, node) => {
+    var targetElements = [];
+
+    switch (symbol) {
+        case ('<') : targetElements = ancestorImmediate(node); break;
+        case ('^') : targetElements = ancestorAll(node); break;
+        case ('%') : targetElements = siblingImmediate(node); break;
+        case ('|') : targetElements = siblingAll(node); break;
+        case ('?') : targetElements = siblingImmediatePrevious(node); break;
+        case ('!') : targetElements = siblingAllPrevious(node); break;
+    }
+
+    return targetElements;
+}
+
+
 const separateQuery = (query) => {
     query = query.replace(/(\w)\s+([\w\.\#])/g,'$1; ;$2');
     query = query.replace(/(\w)\s*?([\>\+\~\<\^\?\!\%\|\*])\s*?([\w\.\#])/g,'$1;$2;$3');
@@ -502,22 +519,6 @@ const siblingAll = (element) => {
     }
 
     return allSiblings;
-}
-
-
-const activateSymbol = (symbol, node) => {
-    var targetElements = [];
-
-    switch (symbol) {
-        case ('<') : targetElements = ancestorImmediate(node); break;
-        case ('^') : targetElements = ancestorAll(node); break;
-        case ('%') : targetElements = siblingImmediate(node); break;
-        case ('|') : targetElements = siblingAll(node); break;
-        case ('?') : targetElements = siblingImmediatePrevious(node); break;
-        case ('!') : targetElements = siblingAllPrevious(node); break;
-    }
-
-    return targetElements;
 }
 
 
