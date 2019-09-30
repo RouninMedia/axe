@@ -17,6 +17,86 @@ axe INSPIRED BY...
 
 
 
+const siblingImmediatePrevious = (element) => {
+    var immediatePreviousSibling = [];
+
+    for (var i = 0; i < element.parentNode.children.length; i++) {
+        if (element.parentNode.children[i] !== element.previousElementSibling) continue;
+        if (element.parentNode.children[i] === element) break;
+        immediatePreviousSibling[0] = element.parentNode.children[i];
+    }
+
+    return immediatePreviousSibling;
+}
+
+
+const siblingImmediate = (element) => {
+    var immediateSiblings = [];
+
+    for (var i = 0; i < element.parentNode.children.length; i++) {
+
+        if (element.parentNode.children[i] === element.previousElementSibling) {
+            immediateSiblings.push(element.parentNode.children[i]);
+        }
+
+        if (element.parentNode.children[i] === element.nextElementSibling) {
+            immediateSiblings.push(element.parentNode.children[i]); break;
+        }
+    }
+
+    return immediateSiblings;
+}
+
+
+const ancestorImmediate = (element) => {
+    var immediateAncestor = [];
+    immediateAncestor[0] = element.parentNode;
+    return immediateAncestor;
+}
+
+
+const ancestorAll = (element) => {
+    var allAncestors = [];
+    var ancestor = element.parentNode;
+
+    while (ancestor.nodeName !== 'HTML') {
+        allAncestors[(allAncestors.length)] = ancestor;
+        ancestor = ancestor.parentNode;
+    }
+
+    return allAncestors;
+}
+
+
+const siblingAllPrevious = (element) => {
+    var s = 0;
+    var allPreviousSiblings = [];
+
+    for (var i = 0; i < element.parentNode.children.length; i++) {
+        if (element.parentNode.children[i] === element) break;
+        allPreviousSiblings[s] = element.parentNode.children[i];
+        s++;
+    }
+
+    return allPreviousSiblings;
+}
+
+
+const siblingAll = (element) => {
+    var s = 0;
+    var allSiblings = [];
+
+    for (var i = 0; i < element.parentNode.children.length; i++) {
+        if (element.parentNode.children[i] === element) continue;
+        allSiblings[s] = element.parentNode.children[i];
+        s++;
+    }
+
+    return allSiblings;
+}
+
+
+
 const activateSymbol = (symbol, node) => {
     var targetElements = [];
 
@@ -145,7 +225,7 @@ document.head.appendChild(axeStylesElement);
 const symbols = ['<','^','%','|','?','!'];
 getAxeStyles();
 
-function getAxeStyles() {
+const getAxeStyles = () => {
     var axeStyleSheet;
 
     for (var i = (styleSheetPaths.length - 1); i > -1 ; i--) {
@@ -237,7 +317,7 @@ const convertQuery = (query) => {
 }
 
 
-function forgeSelector(query) {
+const forgeSelector = (query) => {
 
     var queryString = query.join(' ');
 
@@ -279,7 +359,7 @@ function forgeSelector(query) {
 }
 
 
-function initialiseStylesheets() {
+const initialiseStylesheets = () => {
 
     // CONVERT STYLESHEET INTO ARRAY
 
@@ -440,85 +520,6 @@ const styleString = (styleObject) => {
     });
     
     return styleString;
-}
-
-
-const siblingImmediatePrevious = (element) => {
-    var immediatePreviousSibling = [];
-
-    for (var i = 0; i < element.parentNode.children.length; i++) {
-        if (element.parentNode.children[i] !== element.previousElementSibling) continue;
-        if (element.parentNode.children[i] === element) break;
-        immediatePreviousSibling[0] = element.parentNode.children[i];
-    }
-
-    return immediatePreviousSibling;
-}
-
-
-const siblingImmediate = (element) => {
-    var immediateSiblings = [];
-
-    for (var i = 0; i < element.parentNode.children.length; i++) {
-
-        if (element.parentNode.children[i] === element.previousElementSibling) {
-            immediateSiblings.push(element.parentNode.children[i]);
-        }
-
-        if (element.parentNode.children[i] === element.nextElementSibling) {
-            immediateSiblings.push(element.parentNode.children[i]); break;
-        }
-    }
-
-    return immediateSiblings;
-}
-
-
-const ancestorImmediate = (element) => {
-    var immediateAncestor = [];
-    immediateAncestor[0] = element.parentNode;
-    return immediateAncestor;
-}
-
-
-const ancestorAll = (element) => {
-    var allAncestors = [];
-    var ancestor = element.parentNode;
-
-    while (ancestor.nodeName !== 'HTML') {
-        allAncestors[(allAncestors.length)] = ancestor;
-        ancestor = ancestor.parentNode;
-    }
-
-    return allAncestors;
-}
-
-
-const siblingAllPrevious = (element) => {
-    var s = 0;
-    var allPreviousSiblings = [];
-
-    for (var i = 0; i < element.parentNode.children.length; i++) {
-        if (element.parentNode.children[i] === element) break;
-        allPreviousSiblings[s] = element.parentNode.children[i];
-        s++;
-    }
-
-    return allPreviousSiblings;
-}
-
-
-const siblingAll = (element) => {
-    var s = 0;
-    var allSiblings = [];
-
-    for (var i = 0; i < element.parentNode.children.length; i++) {
-        if (element.parentNode.children[i] === element) continue;
-        allSiblings[s] = element.parentNode.children[i];
-        s++;
-    }
-
-    return allSiblings;
 }
 
 
