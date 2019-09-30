@@ -15,6 +15,16 @@ axe INSPIRED BY...
 
 // console.time('axeSpeed');
 
+
+const separateQuery = (query) => {
+    query = query.replace(/(\w)\s+([\w\.\#])/g,'$1; ;$2');
+    query = query.replace(/(\w)\s*?([\>\+\~\<\^\?\!\%\|\*])\s*?([\w\.\#])/g,'$1;$2;$3');
+    query = query.split(';');
+    return query;
+}
+
+
+
 var styleSheetPaths = [];
 document.querySelectorAll('[rel="stylesheet"]').forEach(function(styleSheetLink, i){
    styleSheetPaths[i] = styleSheetLink.getAttribute('href');
@@ -51,13 +61,6 @@ function getAxeStyles() {
     }
 }
 
-
-const separateQuery = (query) => {
-    query = query.replace(/(\w)\s+([\w\.\#])/g,'$1; ;$2');
-    query = query.replace(/(\w)\s*?([\>\+\~\<\^\?\!\%\|\*])\s*?([\w\.\#])/g,'$1;$2;$3');
-    query = query.split(';');
-    return query;
-}
 
 const reverseSymbol = (query) => {
     for (var q = 0; q < query.length; q++) {
