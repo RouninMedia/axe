@@ -518,7 +518,7 @@ const axeStyle = (axeRule) => {
 }
 
 
-const activateQuery(querySelector,segmentName) => {
+const activateQuery = (querySelector,segmentName) => {
 
     var querySegment = 0;
     var querySelectorFragment = querySelector[1];
