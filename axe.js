@@ -16,6 +16,31 @@ axe INSPIRED BY...
 // console.time('axeSpeed');
 
 
+const getAxeStyles = () => {
+    var axeStyleSheet;
+
+    for (var i = (styleSheetPaths.length - 1); i > -1 ; i--) {
+        axeStyleSheet = new XMLHttpRequest();
+        axeStyleSheet.onreadystatechange = function() {
+            if ((this.readyState === 4) && (this.status === 200)) {
+                axeStylesElement.textContent = this.responseText + axeStylesElement.textContent;
+            }
+        };
+  
+        axeStyleSheet.open('GET', styleSheetPaths[i], true);
+        axeStyleSheet.send();
+    }
+
+    if (typeof axeStyleSheet != 'undefined') {
+        axeStyleSheet.addEventListener('load', function(){initialiseStylesheets();}, false);
+    }
+
+    else {
+        axeStylesElement.textContent = document.head.getElementsByTagName('style')[0].textContent;
+        initialiseStylesheets();
+    }
+}
+
 
 const siblingImmediatePrevious = (element) => {
     var immediatePreviousSibling = [];
@@ -224,32 +249,6 @@ document.head.appendChild(axeStylesElement);
 
 const symbols = ['<','^','%','|','?','!'];
 getAxeStyles();
-
-const getAxeStyles = () => {
-    var axeStyleSheet;
-
-    for (var i = (styleSheetPaths.length - 1); i > -1 ; i--) {
-        axeStyleSheet = new XMLHttpRequest();
-        axeStyleSheet.onreadystatechange = function() {
-            if ((this.readyState === 4) && (this.status === 200)) {
-                axeStylesElement.textContent = this.responseText + axeStylesElement.textContent;
-            }
-        };
-  
-        axeStyleSheet.open('GET', styleSheetPaths[i], true);
-        axeStyleSheet.send();
-    }
-
-    if (typeof axeStyleSheet != 'undefined') {
-        axeStyleSheet.addEventListener('load', function(){initialiseStylesheets();}, false);
-    }
-
-    else {
-        axeStylesElement.textContent = document.head.getElementsByTagName('style')[0].textContent;
-        initialiseStylesheets();
-    }
-}
-
 
 const reverseSymbol = (query) => {
     for (var q = 0; q < query.length; q++) {
