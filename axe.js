@@ -24,6 +24,98 @@ const separateQuery = (query) => {
 }
 
 
+const axeStyle = (axeRule) => {
+
+    var segment = 0;
+    var selectorFragment = axeRule.axeSelector[1];
+
+    while (axeRule.axeSelector.length > (segment + 2)) {
+
+        var newSegment = (segment + 2);
+        var symbol = axeRule.axeSelector[newSegment].substring(1,2);
+        var pattern = selectorFragment.replace(/([^\]]+\])([^\:]+)(\:[^\s]+)(.*)/,'$1$2$4');
+
+        if (pattern.match(/\[/)) {
+            pattern = pattern.replace(/\:/g, '&');
+        }
+
+        else {
+            pattern = pattern.replace(/([^\:]+)(\:[^\s]+)(.*)/, '$1$3');
+        }
+
+        var nodes = document.querySelectorAll(pattern);
+
+        var currentAttribute = '';
+        for (var a = 1; a < newSegment; a++) {currentAttribute += axeRule.axeSelector[a];}
+        var nextAttribute = '';
+        for (var a = 1; a < (newSegment + 1); a++) {nextAttribute += axeRule.axeSelector[a];}
+
+        for (var j = 0; j < nodes.length; j++) {
+            var node = nodes[j];
+            if (axeRule.axeSelector[(segment + 1)].match(/[\:]/)) {
+                node.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + segment).slice(-2), currentAttribute.replace(':','&'));
+            }
+
+            var needle = axeRule.axeSelector[newSegment].substring(3).replace(/\:[^\s]+/g, '');
+
+            var targetElements = activateSymbol(symbol, node);
+            targetElements.forEach(function(targetElement, t) {
+
+                var completeLabel = targetElement[nodeProperties(needle).label];
+
+                if (nodeProperties(needle).hasOwnProperty('qualifierClass')) {
+                    if (targetElement.classList.contains(nodeProperties(needle).qualifierClass)) {
+                        completeLabel += '.' + nodeProperties(needle).qualifierClass.toUpperCase();
+                    }
+                }
+
+                if (completeLabel === nodeProperties(needle).name) {
+                    targetElement.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2), nextAttribute.replace(':','&'));
+                    // console.log('data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2));
+                }
+            });
+        }
+
+        selectorFragment = '[data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2) + '="' + nextAttribute + '"]';
+        selectorFragment += (axeRule.axeSelector[(newSegment + 1)] ? axeRule.axeSelector[(newSegment + 1)] : '');
+        segment = newSegment;
+    }
+
+    for (var a = (axeRule.axeIndex * 100); a < ((axeRule.axeIndex * 100) + (segment - 1)); a++) {
+        var elements = document.querySelectorAll('[data-axe-' + a + ']');
+        elements.forEach(function(element){
+            element.removeAttribute('data-axe-' + a);
+        });
+    }
+
+    // console.log(selectorFragment + '{' + styleString(axeRule.axeStyles) + '}');
+    document.styleSheets[0].insertRule(selectorFragment + '{' + styleString(axeRule.axeStyles) + '}', axeRule.axeIndex);
+
+    if (axeRule.axeSelector[0].match(/\:hover|\:click|\:rightclick|\:doubleclick|\:keypress|\:mousemove|\:resize|\:scroll|\:blur|\:focus|\:change|\:invalid|\:reset|\:search|\:select|\:submit/)) {
+        var pseudoElement = axeRule.axeSelector[0].replace(/[^\:]+(\:[^\s]+).*/,'$1');
+
+        switch (pseudoElement) {
+            case(':hover') : pseudoHover(axeRule); break;
+            case(':click') : pseudoClick(axeRule); break;
+            case(':rightclick') : pseudoRightClick(axeRule); break;
+            case(':doubleclick') : pseudoDoubleClick(axeRule); break;
+            case(':keypress') : pseudoKeyPress(axeRule); break;
+            case(':mousemove') : pseudoMouseMove(axeRule); break;
+            case(':resize') : pseudoResize(axeRule); break;
+            case(':scroll') : pseudoScroll(axeRule); break;
+            case(':blur') : pseudoBlur(axeRule); break;
+            case(':focus') : pseudoFocus(axeRule); break;
+            case(':change') : pseudoChange(axeRule); break;
+            case(':invalid') : pseudoInvalid(axeRule); break;
+            case(':reset') : pseudoReset(axeRule); break;
+            case(':search') : pseudoSearch(axeRule); break;
+            case(':select') : pseudoSelect(axeRule); break;
+            case(':submit') : pseudoSubmit(axeRule); break;
+        }
+    }
+}
+
+
 
 var styleSheetPaths = [];
 document.querySelectorAll('[rel="stylesheet"]').forEach(function(styleSheetLink, i){
@@ -426,98 +518,6 @@ const activateSymbol = (symbol, node) => {
     }
 
     return targetElements;
-}
-
-
-const axeStyle = (axeRule) => {
-
-    var segment = 0;
-    var selectorFragment = axeRule.axeSelector[1];
-
-    while (axeRule.axeSelector.length > (segment + 2)) {
-
-        var newSegment = (segment + 2);
-        var symbol = axeRule.axeSelector[newSegment].substring(1,2);
-        var pattern = selectorFragment.replace(/([^\]]+\])([^\:]+)(\:[^\s]+)(.*)/,'$1$2$4');
-
-        if (pattern.match(/\[/)) {
-            pattern = pattern.replace(/\:/g, '&');
-        }
-
-        else {
-            pattern = pattern.replace(/([^\:]+)(\:[^\s]+)(.*)/, '$1$3');
-        }
-
-        var nodes = document.querySelectorAll(pattern);
-
-        var currentAttribute = '';
-        for (var a = 1; a < newSegment; a++) {currentAttribute += axeRule.axeSelector[a];}
-        var nextAttribute = '';
-        for (var a = 1; a < (newSegment + 1); a++) {nextAttribute += axeRule.axeSelector[a];}
-
-        for (var j = 0; j < nodes.length; j++) {
-            var node = nodes[j];
-            if (axeRule.axeSelector[(segment + 1)].match(/[\:]/)) {
-                node.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + segment).slice(-2), currentAttribute.replace(':','&'));
-            }
-
-            var needle = axeRule.axeSelector[newSegment].substring(3).replace(/\:[^\s]+/g, '');
-
-            var targetElements = activateSymbol(symbol, node);
-            targetElements.forEach(function(targetElement, t) {
-
-                var completeLabel = targetElement[nodeProperties(needle).label];
-
-                if (nodeProperties(needle).hasOwnProperty('qualifierClass')) {
-                    if (targetElement.classList.contains(nodeProperties(needle).qualifierClass)) {
-                        completeLabel += '.' + nodeProperties(needle).qualifierClass.toUpperCase();
-                    }
-                }
-
-                if (completeLabel === nodeProperties(needle).name) {
-                    targetElement.setAttribute('data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2), nextAttribute.replace(':','&'));
-                    // console.log('data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2));
-                }
-            });
-        }
-
-        selectorFragment = '[data-axe-' + axeRule.axeIndex + ('0' + (segment + 1)).slice(-2) + '="' + nextAttribute + '"]';
-        selectorFragment += (axeRule.axeSelector[(newSegment + 1)] ? axeRule.axeSelector[(newSegment + 1)] : '');
-        segment = newSegment;
-    }
-
-    for (var a = (axeRule.axeIndex * 100); a < ((axeRule.axeIndex * 100) + (segment - 1)); a++) {
-        var elements = document.querySelectorAll('[data-axe-' + a + ']');
-        elements.forEach(function(element){
-            element.removeAttribute('data-axe-' + a);
-        });
-    }
-
-    // console.log(selectorFragment + '{' + styleString(axeRule.axeStyles) + '}');
-    document.styleSheets[0].insertRule(selectorFragment + '{' + styleString(axeRule.axeStyles) + '}', axeRule.axeIndex);
-
-    if (axeRule.axeSelector[0].match(/\:hover|\:click|\:rightclick|\:doubleclick|\:keypress|\:mousemove|\:resize|\:scroll|\:blur|\:focus|\:change|\:invalid|\:reset|\:search|\:select|\:submit/)) {
-        var pseudoElement = axeRule.axeSelector[0].replace(/[^\:]+(\:[^\s]+).*/,'$1');
-
-        switch (pseudoElement) {
-            case(':hover') : pseudoHover(axeRule); break;
-            case(':click') : pseudoClick(axeRule); break;
-            case(':rightclick') : pseudoRightClick(axeRule); break;
-            case(':doubleclick') : pseudoDoubleClick(axeRule); break;
-            case(':keypress') : pseudoKeyPress(axeRule); break;
-            case(':mousemove') : pseudoMouseMove(axeRule); break;
-            case(':resize') : pseudoResize(axeRule); break;
-            case(':scroll') : pseudoScroll(axeRule); break;
-            case(':blur') : pseudoBlur(axeRule); break;
-            case(':focus') : pseudoFocus(axeRule); break;
-            case(':change') : pseudoChange(axeRule); break;
-            case(':invalid') : pseudoInvalid(axeRule); break;
-            case(':reset') : pseudoReset(axeRule); break;
-            case(':search') : pseudoSearch(axeRule); break;
-            case(':select') : pseudoSelect(axeRule); break;
-            case(':submit') : pseudoSubmit(axeRule); break;
-        }
-    }
 }
 
 
