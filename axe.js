@@ -16,6 +16,49 @@ axe INSPIRED BY...
 // console.time('axeSpeed');
 
 
+
+const forgeSelector = (query) => {
+
+    var queryString = query.join(' ');
+
+    if (queryString.match(/\:hover\s[\s\+\>\~]+/)) {
+        query = convertQuery(query);
+    }
+
+    var forgedSelector = '';
+
+    for (var a = 0; a < query.length; a++) {
+
+        if (symbols.indexOf(query[a]) > -1) {
+
+            if (symbols.indexOf(query[(a - 2)]) > -1) {
+                forgedSelector += ';';
+            }
+
+            forgedSelector += ';' + ' ' + query[a] + ' ' + query[(a + 1)];
+                    
+            if ((a < (query.length - 2)) && (symbols.indexOf(query[(a + 2)]) < 0)) {
+                forgedSelector += ';';
+            }
+
+            if (a < (query.length - 1)) {
+                a++;
+            }
+        }
+                    
+        else if ((a === 0) || (query[a] === ' ') || (query[(a - 1)] === ' ')) {
+            forgedSelector += query[a];
+        }
+
+        else {
+            forgedSelector += ' ' + query[a];
+        }
+    }
+
+    return forgedSelector;
+}
+
+
 const initialiseStylesheets = () => {
 
     // CONVERT STYLESHEET INTO ARRAY
@@ -437,48 +480,6 @@ const convertQuery = (query) => {
     var query = startOfQuery.concat(newBladeArray).concat(endOfQuery);
 
     return query;
-}
-
-
-const forgeSelector = (query) => {
-
-    var queryString = query.join(' ');
-
-    if (queryString.match(/\:hover\s[\s\+\>\~]+/)) {
-        query = convertQuery(query);
-    }
-
-    var forgedSelector = '';
-
-    for (var a = 0; a < query.length; a++) {
-
-        if (symbols.indexOf(query[a]) > -1) {
-
-            if (symbols.indexOf(query[(a - 2)]) > -1) {
-                forgedSelector += ';';
-            }
-
-            forgedSelector += ';' + ' ' + query[a] + ' ' + query[(a + 1)];
-                    
-            if ((a < (query.length - 2)) && (symbols.indexOf(query[(a + 2)]) < 0)) {
-                forgedSelector += ';';
-            }
-
-            if (a < (query.length - 1)) {
-                a++;
-            }
-        }
-                    
-        else if ((a === 0) || (query[a] === ' ') || (query[(a - 1)] === ' ')) {
-            forgedSelector += query[a];
-        }
-
-        else {
-            forgedSelector += ' ' + query[a];
-        }
-    }
-
-    return forgedSelector;
 }
 
 
