@@ -16,6 +16,151 @@ axe INSPIRED BY...
 // console.time('axeSpeed');
 
 
+const siblingImmediatePrevious = (element) => {
+    var immediatePreviousSibling = [];
+
+    for (var i = 0; i < element.parentNode.children.length; i++) {
+        if (element.parentNode.children[i] !== element.previousElementSibling) continue;
+        if (element.parentNode.children[i] === element) break;
+        immediatePreviousSibling[0] = element.parentNode.children[i];
+    }
+
+    return immediatePreviousSibling;
+}
+
+
+const siblingImmediate = (element) => {
+    var immediateSiblings = [];
+
+    for (var i = 0; i < element.parentNode.children.length; i++) {
+
+        if (element.parentNode.children[i] === element.previousElementSibling) {
+            immediateSiblings.push(element.parentNode.children[i]);
+        }
+
+        if (element.parentNode.children[i] === element.nextElementSibling) {
+            immediateSiblings.push(element.parentNode.children[i]); break;
+        }
+    }
+
+    return immediateSiblings;
+}
+
+
+const ancestorImmediate = (element) => {
+    var immediateAncestor = [];
+    immediateAncestor[0] = element.parentNode;
+    return immediateAncestor;
+}
+
+
+const ancestorAll = (element) => {
+    var allAncestors = [];
+    var ancestor = element.parentNode;
+
+    while (ancestor.nodeName !== 'HTML') {
+        allAncestors[(allAncestors.length)] = ancestor;
+        ancestor = ancestor.parentNode;
+    }
+
+    return allAncestors;
+}
+
+
+const siblingAllPrevious = (element) => {
+    var s = 0;
+    var allPreviousSiblings = [];
+
+    for (var i = 0; i < element.parentNode.children.length; i++) {
+        if (element.parentNode.children[i] === element) break;
+        allPreviousSiblings[s] = element.parentNode.children[i];
+        s++;
+    }
+
+    return allPreviousSiblings;
+}
+
+
+const siblingAll = (element) => {
+    var s = 0;
+    var allSiblings = [];
+
+    for (var i = 0; i < element.parentNode.children.length; i++) {
+        if (element.parentNode.children[i] === element) continue;
+        allSiblings[s] = element.parentNode.children[i];
+        s++;
+    }
+
+    return allSiblings;
+}
+
+
+
+const activateSymbol = (symbol, node) => {
+    var targetElements = [];
+
+    switch (symbol) {
+        case ('<') : targetElements = ancestorImmediate(node); break;
+        case ('^') : targetElements = ancestorAll(node); break;
+        case ('%') : targetElements = siblingImmediate(node); break;
+        case ('|') : targetElements = siblingAll(node); break;
+        case ('?') : targetElements = siblingImmediatePrevious(node); break;
+        case ('!') : targetElements = siblingAllPrevious(node); break;
+    }
+
+    return targetElements;
+}
+
+
+
+const activateQuery = (querySelector,segmentName) => {
+
+    var querySegment = 0;
+    var querySelectorFragment = querySelector[1];
+
+    while (querySelector.length > (querySegment + 2)) {
+
+        var queryNewSegment = (querySegment + 2);
+        var querySymbol = querySelector[queryNewSegment].substring(1,2);
+        var queryPattern = querySelectorFragment.replace(/([^\]]+\])([^\:]+)(\:[^\s]+)(.*)/,'$1$2$4');
+
+        var queryNodes = document.querySelectorAll(queryPattern);
+
+        var queryCurrentAttribute = '';
+        for (var a = 1; a < queryNewSegment; a++) {queryCurrentAttribute += querySelector[a];}
+        var queryNextAttribute = '';
+        for (var a = 1; a < (queryNewSegment + 1); a++) {queryNextAttribute += querySelector[a];}
+
+        for (var j = 0; j < queryNodes.length; j++) {
+            var queryNode = queryNodes[j];
+
+            var queryNeedle = querySelector[queryNewSegment].substring(3).replace(/\:[^\s]+/g, '');
+
+            var queryTargetElements = activateSymbol(querySymbol, queryNode);
+
+            queryTargetElements.forEach(function(queryTargetElement){
+                if (queryTargetElement[nodeProperties(queryNeedle).label] === nodeProperties(queryNeedle).name) {
+                        queryTargetElement.setAttribute('data-' + segmentName + '-segment-' + (querySegment + 1),'');
+                }
+            });
+        }
+
+        querySelectorFragment = '[data-' + segmentName + '-segment-' + (querySegment + 1) + ']';
+        querySelectorFragment += (querySelector[(queryNewSegment + 1)] ? querySelector[(queryNewSegment + 1)] : '');
+        querySegment = queryNewSegment;
+    }
+
+    if (querySelector.length <= (querySegment + 2)) {
+
+        if ((segmentName.substr(-7,7) === '-target') && (querySelector.length % 2 === 0)) {
+            querySelectorFragment = querySelectorFragment.replace(/([^\]]+\]).*/, '$1');
+        }
+
+        return querySelectorFragment;  
+    }
+}
+
+
 
 const pseudoHover = (axeRule) => {
 
@@ -379,102 +524,6 @@ const getAxeStyles = () => {
 }
 
 
-const siblingImmediatePrevious = (element) => {
-    var immediatePreviousSibling = [];
-
-    for (var i = 0; i < element.parentNode.children.length; i++) {
-        if (element.parentNode.children[i] !== element.previousElementSibling) continue;
-        if (element.parentNode.children[i] === element) break;
-        immediatePreviousSibling[0] = element.parentNode.children[i];
-    }
-
-    return immediatePreviousSibling;
-}
-
-
-const siblingImmediate = (element) => {
-    var immediateSiblings = [];
-
-    for (var i = 0; i < element.parentNode.children.length; i++) {
-
-        if (element.parentNode.children[i] === element.previousElementSibling) {
-            immediateSiblings.push(element.parentNode.children[i]);
-        }
-
-        if (element.parentNode.children[i] === element.nextElementSibling) {
-            immediateSiblings.push(element.parentNode.children[i]); break;
-        }
-    }
-
-    return immediateSiblings;
-}
-
-
-const ancestorImmediate = (element) => {
-    var immediateAncestor = [];
-    immediateAncestor[0] = element.parentNode;
-    return immediateAncestor;
-}
-
-
-const ancestorAll = (element) => {
-    var allAncestors = [];
-    var ancestor = element.parentNode;
-
-    while (ancestor.nodeName !== 'HTML') {
-        allAncestors[(allAncestors.length)] = ancestor;
-        ancestor = ancestor.parentNode;
-    }
-
-    return allAncestors;
-}
-
-
-const siblingAllPrevious = (element) => {
-    var s = 0;
-    var allPreviousSiblings = [];
-
-    for (var i = 0; i < element.parentNode.children.length; i++) {
-        if (element.parentNode.children[i] === element) break;
-        allPreviousSiblings[s] = element.parentNode.children[i];
-        s++;
-    }
-
-    return allPreviousSiblings;
-}
-
-
-const siblingAll = (element) => {
-    var s = 0;
-    var allSiblings = [];
-
-    for (var i = 0; i < element.parentNode.children.length; i++) {
-        if (element.parentNode.children[i] === element) continue;
-        allSiblings[s] = element.parentNode.children[i];
-        s++;
-    }
-
-    return allSiblings;
-}
-
-
-
-const activateSymbol = (symbol, node) => {
-    var targetElements = [];
-
-    switch (symbol) {
-        case ('<') : targetElements = ancestorImmediate(node); break;
-        case ('^') : targetElements = ancestorAll(node); break;
-        case ('%') : targetElements = siblingImmediate(node); break;
-        case ('|') : targetElements = siblingAll(node); break;
-        case ('?') : targetElements = siblingImmediatePrevious(node); break;
-        case ('!') : targetElements = siblingAllPrevious(node); break;
-    }
-
-    return targetElements;
-}
-
-
 const separateQuery = (query) => {
     query = query.replace(/(\w)\s+([\w\.\#])/g,'$1; ;$2');
     query = query.replace(/(\w)\s*?([\>\+\~\<\^\?\!\%\|\*])\s*?([\w\.\#])/g,'$1;$2;$3');
@@ -650,52 +699,4 @@ const convertQuery = (query) => {
     var query = startOfQuery.concat(newBladeArray).concat(endOfQuery);
 
     return query;
-}
-
-
-const activateQuery = (querySelector,segmentName) => {
-
-    var querySegment = 0;
-    var querySelectorFragment = querySelector[1];
-
-    while (querySelector.length > (querySegment + 2)) {
-
-        var queryNewSegment = (querySegment + 2);
-        var querySymbol = querySelector[queryNewSegment].substring(1,2);
-        var queryPattern = querySelectorFragment.replace(/([^\]]+\])([^\:]+)(\:[^\s]+)(.*)/,'$1$2$4');
-
-        var queryNodes = document.querySelectorAll(queryPattern);
-
-        var queryCurrentAttribute = '';
-        for (var a = 1; a < queryNewSegment; a++) {queryCurrentAttribute += querySelector[a];}
-        var queryNextAttribute = '';
-        for (var a = 1; a < (queryNewSegment + 1); a++) {queryNextAttribute += querySelector[a];}
-
-        for (var j = 0; j < queryNodes.length; j++) {
-            var queryNode = queryNodes[j];
-
-            var queryNeedle = querySelector[queryNewSegment].substring(3).replace(/\:[^\s]+/g, '');
-
-            var queryTargetElements = activateSymbol(querySymbol, queryNode);
-
-            queryTargetElements.forEach(function(queryTargetElement){
-                if (queryTargetElement[nodeProperties(queryNeedle).label] === nodeProperties(queryNeedle).name) {
-                        queryTargetElement.setAttribute('data-' + segmentName + '-segment-' + (querySegment + 1),'');
-                }
-            });
-        }
-
-        querySelectorFragment = '[data-' + segmentName + '-segment-' + (querySegment + 1) + ']';
-        querySelectorFragment += (querySelector[(queryNewSegment + 1)] ? querySelector[(queryNewSegment + 1)] : '');
-        querySegment = queryNewSegment;
-    }
-
-    if (querySelector.length <= (querySegment + 2)) {
-
-        if ((segmentName.substr(-7,7) === '-target') && (querySelector.length % 2 === 0)) {
-            querySelectorFragment = querySelectorFragment.replace(/([^\]]+\]).*/, '$1');
-        }
-
-        return querySelectorFragment;  
-    }
 }
