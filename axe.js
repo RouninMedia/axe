@@ -16,6 +16,35 @@ axe INSPIRED BY...
 // console.time('axeSpeed');
 
 
+const nodeProperties = (node) => {
+    var nodeProperties = {};
+    
+    switch (node.substring(0,1)) {
+        case ('#') :
+            nodeProperties['type'] = 2;
+            nodeProperties['name'] = node.substring(1);
+            nodeProperties['label'] = 'id';
+            break;
+
+        case ('.') :
+            nodeProperties['type'] = 1;
+            nodeProperties['name'] = node.substring(1);
+            nodeProperties['label'] = 'className';
+            break;
+
+        default :
+            nodeProperties['type'] = 0;
+            nodeProperties['name'] = node.toUpperCase();
+            nodeProperties['label'] = 'nodeName';
+    }
+
+    if (node.indexOf('.') > 0) {
+        nodeProperties['qualifierClass'] = node.substr(node.indexOf('.') + 1);   
+    }
+
+    return nodeProperties;
+}
+
 
 const forgeSelector = (query) => {
 
@@ -480,36 +509,6 @@ const convertQuery = (query) => {
     var query = startOfQuery.concat(newBladeArray).concat(endOfQuery);
 
     return query;
-}
-
-
-const nodeProperties = (node) => {
-    var nodeProperties = {};
-    
-    switch (node.substring(0,1)) {
-        case ('#') :
-            nodeProperties['type'] = 2;
-            nodeProperties['name'] = node.substring(1);
-            nodeProperties['label'] = 'id';
-            break;
-
-        case ('.') :
-            nodeProperties['type'] = 1;
-            nodeProperties['name'] = node.substring(1);
-            nodeProperties['label'] = 'className';
-            break;
-
-        default :
-            nodeProperties['type'] = 0;
-            nodeProperties['name'] = node.toUpperCase();
-            nodeProperties['label'] = 'nodeName';
-    }
-
-    if (node.indexOf('.') > 0) {
-        nodeProperties['qualifierClass'] = node.substr(node.indexOf('.') + 1);   
-    }
-
-    return nodeProperties;
 }
 
 const styleString = (styleObject) => {
