@@ -16,6 +16,18 @@ axe INSPIRED BY...
 // console.time('axeSpeed');
 
 
+
+const styleString = (styleObject) => {
+    var styleString = '';
+
+    Object.keys(styleObject).forEach(function(property){
+        styleString += property + ':' + styleObject[property] + '; ';
+    });
+    
+    return styleString;
+}
+
+
 const nodeProperties = (node) => {
     var nodeProperties = {};
     
@@ -509,16 +521,6 @@ const convertQuery = (query) => {
     var query = startOfQuery.concat(newBladeArray).concat(endOfQuery);
 
     return query;
-}
-
-const styleString = (styleObject) => {
-    var styleString = '';
-
-    Object.keys(styleObject).forEach(function(property){
-        styleString += property + ':' + styleObject[property] + '; ';
-    });
-    
-    return styleString;
 }
 
 
