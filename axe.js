@@ -9,6 +9,13 @@ axe INSPIRED BY...
 6) Element Queries
 */
 
+/*
+NOTA BENE
+=========
+"CSS should not depend on the markup; the markup should depend on the CSS." - Keith J. Grant
+(Source: https://keithjgrant.com/posts/2015/05/against-css-in-js/)
+*/
+
 // THERE NEEDS TO BE AN :nth-of-set() AT SOME POINT which handles element classes as well as types 
 // nth-of-set can also take context. eg. img:nth-of-set(even, 'main aside')
 // will select every even img from this: <main> [...] <aside><p><img></p> <p></p> <p><img></p></aside> [...] </main> etc.
