@@ -2,7 +2,12 @@
 
 **axe selectors** are an *extension* to the official selector syntax of Cascading Style Sheets (.css files).
 
-**axe selectors** enable the selection of parent elements, ancestor elements and preceding sibling elements.
+**axe selectors** enable the selection of:
+
+ - parent elements
+ - ancestor elements
+ - preceding sibling elements
+ - unrelated elements
 
 **axe selectors** also enable the selection of _any_ other element in the document by id, class, attribute or type.
 
