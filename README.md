@@ -26,4 +26,4 @@
 - **|** - any sibling selector
 - **<** - immediate parent selector
 - **^** - any ancestor selector
-- **\** - any other element selector
+- **\\** - any other element selector
