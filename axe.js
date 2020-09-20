@@ -10,10 +10,14 @@ axe INSPIRED BY...
 */
 
 /*
-NOTA BENE
-=========
+NOTA BENE (BEFORE GETTING CARRIED AWAY WITH AXE)
+================================================
 "CSS should not depend on the markup; the markup should depend on the CSS." - Keith J. Grant
 (Source: https://keithjgrant.com/posts/2015/05/against-css-in-js/)
+ie. we need to recognise that CSS compound selectors describing relationships between elements in the HTML document
+lead, by definition, to **tighter coupling**. And, needless to say, this *isn't* a good thing.
+As a rule of thumb something like BEM-style classnames are always going to be better than compound selectors describing
+inter-element relationships.
 */
 
 // THERE NEEDS TO BE AN :nth-of-set() AT SOME POINT which handles element classes as well as types 
