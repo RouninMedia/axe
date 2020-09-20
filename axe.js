@@ -28,6 +28,9 @@ inter-element relationships.
 
 // console.time('axeSpeed');
 
+/* jshint esversion: 6 */
+
+
 
 const siblingImmediatePrevious = (element) => {
     let immediatePreviousSibling = [];
@@ -232,7 +235,7 @@ const pseudoHover = (axeRule) => {
         }
         
         if (targetSelector.length > 0) {
-            if (targetSelector[0].match(/\?|\!|\^|\||\<|\%/)) {
+            if (targetSelector[0].match(/\?|\!|\^|\||<|\%/)) {
                 targetSelector.unshift('[data-axe-' + axeRule.axeIndex + '-blade-' + bladeIndex + ']');
             }
 
@@ -445,7 +448,7 @@ const initialiseStylesheets = () => {
                         stylesheet.splice(j, (ruleSet.length + 1), ...ruleDeclaration);
 
                         for (let r = 0; r < ruleCount; r++) {
-                            if (ruleGroup[r].match(/[\<\^\?\!\%\|]/) === null) {
+                            if (ruleGroup[r].match(/[<\^\?\!\%\|]/) === null) {
                                 let rulePosition = ((ruleIndex - 1) > document.styleSheets[0].cssRules.length ? document.styleSheets[0].cssRules.length : (ruleIndex - 1));
                             
                                 let ruleSeries = '';
@@ -471,7 +474,7 @@ const initialiseStylesheets = () => {
 
         for (let j = 0; j < stylesheetRules.length; j++) {
 
-            if ((typeof stylesheetRules[j] === 'number') && (stylesheetRules[(j+1)].match(/(\<|\^|\?|\!|\%|\|)/))) {
+            if ((typeof stylesheetRules[j] === 'number') && (stylesheetRules[(j+1)].match(/(<|\^|\?|\!|\%|\|)/))) {
 
                 axe.axeRules[axeRuleIndex] = {};
                 let axeRule = axe.axeRules[axeRuleIndex];
@@ -539,7 +542,7 @@ const getAxeStyles = () => {
 
 const separateQuery = (query) => {
     query = query.replace(/(\w)\s+([\w\.\#])/g,'$1; ;$2');
-    query = query.replace(/(\w)\s*?([\>\+\~\<\^\?\!\%\|\*])\s*?([\w\.\#])/g,'$1;$2;$3');
+    query = query.replace(/(\w)\s*?([\>\+\~<\^\?\!\%\|\*])\s*?([\w\.\#])/g,'$1;$2;$3');
     query = query.split(';');
     return query;
 }
